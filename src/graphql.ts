@@ -1,3 +1,5 @@
+import * as GQL from './schema/graphqlschema'
+
 const graphQLContent = Symbol('graphQLContent')
 export interface GraphQLDocument {
     [graphQLContent]: string
@@ -10,23 +12,10 @@ export const gql = (template: TemplateStringsArray, ...substitutions: any[]): Gr
     [graphQLContent]: String.raw(template, ...substitutions.map(s => s[graphQLContent] || s)),
 })
 
-export type GraphQLID = string
-
 /**
- * The response from a GraphQL API query request.
+ * The response from a GraphQL API query.
  */
-export interface GraphQLResponseRoot<D> {
-    data?: D
-    errors?: GraphQLResponseError[]
-}
-
-export interface GraphQLResponseError {
-    message: string
-    locations?: GraphQLResponseErrorLocation[]
-    [propName: string]: any
-}
-
-export interface GraphQLResponseErrorLocation {
-    line: number
-    column: number
+export interface QueryResult<D extends Partial<GQL.IQuery>> {
+    data?: GQL.IQuery
+    errors?: GQL.IGraphQLResponseError[]
 }

@@ -1,15 +1,26 @@
-import { ExtensionSettings, SourcegraphExtension } from '../copypasta'
+import { ExtensionSettings } from '../copypasta'
 import { ErrorLike } from '../errors'
+import { SourcegraphExtension } from '../schema/extension.schema'
+import * as GQL from '../schema/graphqlschema'
 import { ConfigurationSubject, ConfiguredSubject } from '../settings/cascade'
 
 /**
  * Describes a configured extension.
  *
+ * TODO!(sqs): rename to ConfiguredExtension
+ *
  * @template S the configuration subject type
  * @template C the settings type
  * @template RX the registry extension type
  */
-export interface Extension<S extends ConfigurationSubject, C, RX> {
+export interface ConfiguredExtension<
+    S extends ConfigurationSubject = ConfigurationSubject,
+    C extends ExtensionSettings = ExtensionSettings,
+    RX extends Pick<GQL.IRegistryExtension, 'id' | 'url' | 'viewerCanAdminister'> = Pick<
+        GQL.IRegistryExtension,
+        'id' | 'url' | 'viewerCanAdminister'
+    >
+> {
     /** The ID of the extension, unique on a Sourcegraph site. */
     extensionID: string
 

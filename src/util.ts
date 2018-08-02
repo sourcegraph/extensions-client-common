@@ -1,4 +1,4 @@
-import { parse, ParseError, ParseErrorCode } from '@sqs/jsonc-parser'
+import { parse, ParseError, ParseErrorCode } from '@sqs/jsonc-parser/lib/main'
 import { createAggregateError } from './errors'
 
 /**

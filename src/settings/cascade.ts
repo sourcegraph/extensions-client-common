@@ -1,13 +1,15 @@
 import { ErrorLike } from '../errors'
+import * as GQL from '../schema/graphqlschema'
 
 /**
  * A configuration subject is something that can have settings associated with it, such as a site ("global
  * settings"), an organization ("organization settings"), a user ("user settings"), etc.
  */
-export interface ConfigurationSubject {
-    /** A unique ID for this subject. */
-    id: string
-}
+export type ConfigurationSubject = Pick<GQL.IConfigurationSubject, 'id' | 'settingsURL' | 'viewerCanAdminister'> &
+    (
+        | Pick<GQL.IUser, '__typename' | 'username' | 'displayName'>
+        | Pick<GQL.IOrg, '__typename' | 'name' | 'displayName'>
+        | Pick<GQL.ISite, '__typename' | 'siteID'>)
 
 /**
  * A cascade of settings from multiple subjects, from lowest precedence to highest precedence, and the final
@@ -45,4 +47,35 @@ export interface ConfiguredSubject<S extends ConfigurationSubject, C> {
      * null if there are no settings.
      */
     settings: C | ErrorLike | null
+}
+
+/**
+ * The conventional ordering of extension configuration subject types in a list.
+ */
+export const SUBJECT_TYPE_ORDER: GQL.ConfigurationSubject['__typename'][] = ['User', 'Org', 'Site']
+
+export function subjectTypeHeader(nodeType: GQL.ConfigurationSubject['__typename']): string | null {
+    switch (nodeType) {
+        case 'Site':
+            return null
+        case 'Org':
+            return 'Organization:'
+        case 'User':
+            return null
+        default:
+            return null
+    }
+}
+
+export function subjectLabel(subject: ConfigurationSubject): string {
+    switch (subject.__typename) {
+        case 'Site':
+            return 'Everyone'
+        case 'Org':
+            return subject.name
+        case 'User':
+            return subject.username
+        default:
+            return 'Unknown'
+    }
 }

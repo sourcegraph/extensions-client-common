@@ -1,6 +1,7 @@
 import { Observable } from 'rxjs'
 import { Controller } from './controller'
-import { GraphQLDocument, GraphQLResponseRoot } from './graphql'
+import { GraphQLDocument, QueryResult } from './graphql'
+import * as GQL from './schema/graphqlschema'
 import { ConfigurationCascade, ConfigurationSubject } from './settings/cascade'
 
 /**
@@ -13,6 +14,17 @@ export interface Context<S extends ConfigurationSubject, C> {
      */
     readonly configurationCascade: Observable<ConfigurationCascade<S, C>>
 
+    /** Updates the extension settings for extensionID and for the given subject. */
+    updateExtensionSettings(
+        subject: Pick<GQL.ConfigurationSubject, 'id'>,
+        args: {
+            extensionID: string
+            edit?: GQL.IConfigurationEdit
+            enabled?: boolean
+            remove?: boolean
+        }
+    ): Observable<void>
+
     /**
      * Sends a request to the Sourcegraph GraphQL API and returns the response.
      *
@@ -20,13 +32,16 @@ export interface Context<S extends ConfigurationSubject, C> {
      * @param variables An object whose properties are GraphQL query name-value variable pairs
      * @return Observable that emits the result or an error if the HTTP request failed
      */
-    requestGraphQL<D>(request: GraphQLDocument, variables?: { [name: string]: any }): Observable<GraphQLResponseRoot<D>>
+    queryGraphQL(
+        request: GraphQLDocument,
+        variables?: { [name: string]: any }
+    ): Observable<QueryResult<Pick<GQL.IQuery, 'extensionRegistry'>>>
 
     /**
-     * A React component that displays a loading indicator and sizes itself appropriately with its surrounding DOM
-     * flow content.
+     * React components for icons. They are expected to size themselves appropriately with the surrounding DOM flow
+     * content.
      */
-    readonly LoaderIcon: React.ComponentType<{ className: 'icon-inline' }>
+    readonly icons: Record<'Loader' | 'Warning', React.ComponentType<{ className: 'icon-inline' }>>
 }
 
 /**
@@ -39,6 +54,6 @@ export interface ContextProps<S extends ConfigurationSubject, C> {
 /**
  * React partial props for components needing the ExtensionsController.
  */
-export interface ExtensionsProps {
-    extensions: Controller
+export interface ExtensionsProps<S extends ConfigurationSubject, C> {
+    extensions: Controller<S, C>
 }

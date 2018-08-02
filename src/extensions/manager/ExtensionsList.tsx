@@ -12,10 +12,12 @@ import {
     takeUntil,
     withLatestFrom,
 } from 'rxjs/operators'
-import { ContextProps } from '../../context'
+import { ContextProps, ExtensionsProps } from '../../context'
 import { asError, createAggregateError, ErrorLike, isErrorLike } from '../../errors'
-import { ExtensionsProps } from '../backend/features'
-import { Extension } from './extension'
+import { gql } from '../../graphql'
+import * as GQL from '../../schema/graphqlschema'
+import { ConfigurationSubject } from '../../settings/cascade'
+import { ConfiguredExtension } from '../extension'
 import { ExtensionCard } from './ExtensionCard'
 
 export const registryExtensionFragment = gql`
@@ -54,7 +56,10 @@ export const registryExtensionFragment = gql`
     }
 `
 
-interface Props extends ContextProps, ExtensionsProps, RouteComponentProps<{}> {
+interface Props<S extends ConfigurationSubject, C>
+    extends ContextProps<S, C>,
+        ExtensionsProps<S, C>,
+        RouteComponentProps<{}> {
     authenticatedUser: GQL.IUser | null
     emptyElement?: React.ReactFragment
 }
@@ -63,7 +68,7 @@ const LOADING: 'loading' = 'loading'
 
 interface ExtensionsResult {
     /** The configured extensions. */
-    Extensions: Extension[]
+    Extensions: ConfiguredExtension[]
 
     /** An error message that should be displayed to the user (in addition to the configured extensions). */
     error: string | null
@@ -86,16 +91,16 @@ interface State {
 /**
  * Displays a list of all extensions used by a configuration subject.
  */
-export class ExtensionsList extends React.PureComponent<Props, State> {
+export class ExtensionsList<S extends ConfigurationSubject, C> extends React.PureComponent<Props<S, C>, State> {
     private static URL_QUERY_PARAM = 'query'
 
     private updates = new Subject<void>()
 
-    private componentUpdates = new Subject<Props>()
+    private componentUpdates = new Subject<Props<S, C>>()
     private queryChanges = new Subject<string>()
     private subscriptions = new Subscription()
 
-    constructor(props: Props) {
+    constructor(props: Props<S, C>) {
         super(props)
         this.state = {
             query: this.getQueryFromProps(props),
@@ -103,7 +108,7 @@ export class ExtensionsList extends React.PureComponent<Props, State> {
         }
     }
 
-    private getQueryFromProps(props: Pick<Props, 'location'>): string {
+    private getQueryFromProps(props: Pick<Props<S, C>, 'location'>): string {
         const params = new URLSearchParams(location.search)
         return params.get(ExtensionsList.URL_QUERY_PARAM) || ''
     }
@@ -170,7 +175,7 @@ export class ExtensionsList extends React.PureComponent<Props, State> {
         this.queryChanges.next(this.state.query)
     }
 
-    public componentWillReceiveProps(nextProps: Props): void {
+    public componentWillReceiveProps(nextProps: Props<S, C>): void {
         this.componentUpdates.next(nextProps)
     }
 
@@ -199,7 +204,7 @@ export class ExtensionsList extends React.PureComponent<Props, State> {
                     </div>
                 </form>
                 {this.state.data.resultOrError === LOADING ? (
-                    <this.props.forxContext.LoaderIcon className="icon-inline" />
+                    <this.props.forxContext.icons.Loader className="icon-inline" />
                 ) : isErrorLike(this.state.data.resultOrError) ? (
                     <div className="alert alert-danger">{this.state.data.resultOrError.message}</div>
                 ) : (
@@ -238,41 +243,43 @@ export class ExtensionsList extends React.PureComponent<Props, State> {
     private onQueryChange: React.FormEventHandler<HTMLInputElement> = e => this.queryChanges.next(e.currentTarget.value)
 
     private queryRegistryExtensions = (args: { query?: string }): Observable<ExtensionsResult> =>
-        this.props.extensions.viewerExtensions.pipe(
+        this.props.extensions.viewerConfiguredExtensions.pipe(
             // Avoid refreshing (and changing order) when the user merely interacts with an extension (e.g.,
             // toggling its enablement), to reduce UI jitter.
             take(1),
 
             switchMap(viewerExtensions =>
-                queryGraphQL(
-                    gql`
-                        query RegistryExtensions($query: String, $prioritizeExtensionIDs: [String!]!) {
-                            extensionRegistry {
-                                extensions(query: $query, prioritizeExtensionIDs: $prioritizeExtensionIDs) {
-                                    nodes {
-                                        ...RegistryExtensionFields
+                this.props.forxContext
+                    .queryGraphQL(
+                        gql`
+                            query RegistryExtensions($query: String, $prioritizeExtensionIDs: [String!]!) {
+                                extensionRegistry {
+                                    extensions(query: $query, prioritizeExtensionIDs: $prioritizeExtensionIDs) {
+                                        nodes {
+                                            ...RegistryExtensionFields
+                                        }
+                                        error
                                     }
-                                    error
                                 }
                             }
-                        }
-                        ${registryExtensionFragment}
-                    `,
-                    {
-                        ...args,
-                        prioritizeExtensionIDs: viewerExtensions.map(({ extensionID }) => extensionID),
-                    } as GQL.IExtensionsOnExtensionRegistryArguments
-                ).pipe(
-                    map(({ data, errors }) => {
-                        if (!data || !data.extensionRegistry || !data.extensionRegistry.extensions || errors) {
-                            throw createAggregateError(errors)
-                        }
-                        return {
-                            registryExtensions: data.extensionRegistry.extensions.nodes,
-                            error: data.extensionRegistry.extensions.error,
-                        }
-                    })
-                )
+                            ${registryExtensionFragment}
+                        `,
+                        {
+                            ...args,
+                            prioritizeExtensionIDs: viewerExtensions.map(({ extensionID }) => extensionID),
+                        } as GQL.IExtensionsOnExtensionRegistryArguments
+                    )
+                    .pipe(
+                        map(({ data, errors }) => {
+                            if (!data || !data.extensionRegistry || !data.extensionRegistry.extensions || errors) {
+                                throw createAggregateError(errors)
+                            }
+                            return {
+                                registryExtensions: data.extensionRegistry.extensions.nodes,
+                                error: data.extensionRegistry.extensions.error,
+                            }
+                        })
+                    )
             ),
             switchMap(({ registryExtensions, error }) =>
                 this.props.extensions

@@ -1,15 +1,15 @@
 {
-  "name": "forx",
+  "name": "for-x",
   "version": "0.0.0-development",
   "description": "Common TypeScript/React client application code for CXP extension configuration and management, used in Sourcegraph and \"Sourcegraph for X\" products",
   "author": "Sourcegraph",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/sourcegraph/forx.git"
+    "url": "https://github.com/sourcegraph/for-x.git"
   },
   "bugs": {
-    "url": "https://github.com/sourcegraph/forx/issues"
+    "url": "https://github.com/sourcegraph/for-x/issues"
   },
   "main": "lib/index.js",
   "module": "lib/index.js",

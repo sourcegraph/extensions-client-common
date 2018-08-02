@@ -1,5 +1,3 @@
-import Loader from '@sourcegraph/icons/lib/Loader'
-import { upperFirst } from 'lodash'
 import * as React from 'react'
 import { RouteComponentProps } from 'react-router'
 import { combineLatest, concat, Observable, of, Subject, Subscription } from 'rxjs'
@@ -14,29 +12,58 @@ import {
     takeUntil,
     withLatestFrom,
 } from 'rxjs/operators'
+import { ContextProps } from '../../context'
+import { asError, createAggregateError, ErrorLike, isErrorLike } from '../../errors'
 import { ExtensionsProps } from '../backend/features'
-import { gql, queryGraphQL } from '../backend/graphql'
-import * as GQL from '../backend/graphqlschema'
-import { asError, createAggregateError, ErrorLike, isErrorLike } from '../util/errors'
-import { ConfiguredExtensionNodeCard } from './ConfiguredExtensionNodeCard'
-import { ConfiguredExtension } from './extension'
+import { Extension } from './extension'
+import { ExtensionCard } from './ExtensionCard'
 
-export interface ConfiguredExtensionNodeProps {
-    node: ConfiguredExtension
-    authenticatedUser: GQL.IUser | null
-    onDidUpdate: () => void
-}
+export const registryExtensionFragment = gql`
+    fragment RegistryExtensionFields on RegistryExtension {
+        id
+        publisher {
+            __typename
+            ... on User {
+                id
+                username
+                displayName
+                url
+            }
+            ... on Org {
+                id
+                name
+                displayName
+                url
+            }
+        }
+        extensionID
+        extensionIDWithoutRegistry
+        name
+        manifest {
+            raw
+            title
+            description
+        }
+        createdAt
+        updatedAt
+        url
+        remoteURL
+        registryName
+        isLocal
+        viewerCanAdminister
+    }
+`
 
-interface Props extends ExtensionsProps, RouteComponentProps<{}> {
+interface Props extends ContextProps, ExtensionsProps, RouteComponentProps<{}> {
     authenticatedUser: GQL.IUser | null
     emptyElement?: React.ReactFragment
 }
 
 const LOADING: 'loading' = 'loading'
 
-interface ConfiguredExtensionsResult {
+interface ExtensionsResult {
     /** The configured extensions. */
-    configuredExtensions: ConfiguredExtension[]
+    Extensions: Extension[]
 
     /** An error message that should be displayed to the user (in addition to the configured extensions). */
     error: string | null
@@ -52,14 +79,14 @@ interface State {
         query: string
 
         /** The results, loading, or an error. */
-        resultOrError: typeof LOADING | ConfiguredExtensionsResult | ErrorLike
+        resultOrError: typeof LOADING | ExtensionsResult | ErrorLike
     }
 }
 
 /**
  * Displays a list of all extensions used by a configuration subject.
  */
-export class ConfiguredExtensionsList extends React.PureComponent<Props, State> {
+export class ExtensionsList extends React.PureComponent<Props, State> {
     private static URL_QUERY_PARAM = 'query'
 
     private updates = new Subject<void>()
@@ -78,7 +105,7 @@ export class ConfiguredExtensionsList extends React.PureComponent<Props, State> 
 
     private getQueryFromProps(props: Pick<Props, 'location'>): string {
         const params = new URLSearchParams(location.search)
-        return params.get(ConfiguredExtensionsList.URL_QUERY_PARAM) || ''
+        return params.get(ExtensionsList.URL_QUERY_PARAM) || ''
     }
 
     public componentDidMount(): void {
@@ -93,10 +120,16 @@ export class ConfiguredExtensionsList extends React.PureComponent<Props, State> 
         // Update URL when query field changes.
         this.subscriptions.add(
             debouncedQueryChanges.subscribe(query => {
+                let search: string
+                if (query) {
+                    const searchParams = new URLSearchParams()
+                    searchParams.set(ExtensionsList.URL_QUERY_PARAM, query)
+                    search = searchParams.toString()
+                } else {
+                    search = ''
+                }
                 this.props.history.replace({
-                    search: query
-                        ? new URLSearchParams({ [ConfiguredExtensionsList.URL_QUERY_PARAM]: query }).toString()
-                        : '',
+                    search,
                     hash: this.props.location.hash,
                 })
             })
@@ -166,15 +199,15 @@ export class ConfiguredExtensionsList extends React.PureComponent<Props, State> 
                     </div>
                 </form>
                 {this.state.data.resultOrError === LOADING ? (
-                    <Loader className="icon-inline" />
+                    <this.props.forxContext.LoaderIcon className="icon-inline" />
                 ) : isErrorLike(this.state.data.resultOrError) ? (
-                    <div className="alert alert-danger">{upperFirst(this.state.data.resultOrError.message)}</div>
+                    <div className="alert alert-danger">{this.state.data.resultOrError.message}</div>
                 ) : (
                     <>
                         {this.state.data.resultOrError.error && (
                             <div className="alert alert-danger my-2">{this.state.data.resultOrError.error}</div>
                         )}
-                        {this.state.data.resultOrError.configuredExtensions.length === 0 ? (
+                        {this.state.data.resultOrError.Extensions.length === 0 ? (
                             this.state.data.query ? (
                                 <span className="text-muted">
                                     No extensions matching <strong>{this.state.data.query}</strong>
@@ -184,12 +217,12 @@ export class ConfiguredExtensionsList extends React.PureComponent<Props, State> 
                             )
                         ) : (
                             <div className="row mt-3">
-                                {this.state.data.resultOrError.configuredExtensions.map((e, i) => (
-                                    <ConfiguredExtensionNodeCard
+                                {this.state.data.resultOrError.Extensions.map((e, i) => (
+                                    <ExtensionCard
                                         key={i}
                                         authenticatedUser={this.props.authenticatedUser}
                                         node={e}
-                                        onDidUpdate={this.onDidUpdateConfiguredExtension}
+                                        onDidUpdate={this.onDidUpdateExtension}
                                     />
                                 ))}
                             </div>
@@ -204,13 +237,13 @@ export class ConfiguredExtensionsList extends React.PureComponent<Props, State> 
 
     private onQueryChange: React.FormEventHandler<HTMLInputElement> = e => this.queryChanges.next(e.currentTarget.value)
 
-    private queryRegistryExtensions = (args: { query?: string }): Observable<ConfiguredExtensionsResult> =>
-        this.props.extensions.viewerConfiguredExtensions.pipe(
+    private queryRegistryExtensions = (args: { query?: string }): Observable<ExtensionsResult> =>
+        this.props.extensions.viewerExtensions.pipe(
             // Avoid refreshing (and changing order) when the user merely interacts with an extension (e.g.,
             // toggling its enablement), to reduce UI jitter.
             take(1),
 
-            switchMap(viewerConfiguredExtensions =>
+            switchMap(viewerExtensions =>
                 queryGraphQL(
                     gql`
                         query RegistryExtensions($query: String, $prioritizeExtensionIDs: [String!]!) {
@@ -227,7 +260,7 @@ export class ConfiguredExtensionsList extends React.PureComponent<Props, State> 
                     `,
                     {
                         ...args,
-                        prioritizeExtensionIDs: viewerConfiguredExtensions.map(({ extensionID }) => extensionID),
+                        prioritizeExtensionIDs: viewerExtensions.map(({ extensionID }) => extensionID),
                     } as GQL.IExtensionsOnExtensionRegistryArguments
                 ).pipe(
                     map(({ data, errors }) => {
@@ -244,9 +277,9 @@ export class ConfiguredExtensionsList extends React.PureComponent<Props, State> 
             switchMap(({ registryExtensions, error }) =>
                 this.props.extensions
                     .withConfiguration(of(registryExtensions))
-                    .pipe(map(configuredExtensions => ({ configuredExtensions, error })))
+                    .pipe(map(Extensions => ({ Extensions, error })))
             )
         )
 
-    private onDidUpdateConfiguredExtension = () => this.updates.next()
+    private onDidUpdateExtension = () => this.updates.next()
 }

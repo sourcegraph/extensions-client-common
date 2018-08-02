@@ -12,6 +12,9 @@ export interface ConfigurationSubject {
 /**
  * A cascade of settings from multiple subjects, from lowest precedence to highest precedence, and the final
  * settings, merged in order of precedence from the settings for each subject in the cascade.
+ *
+ * @template S the configuration subject type
+ * @template C the settings type
  */
 export interface ConfigurationCascade<S extends ConfigurationSubject, C> {
     /**
@@ -27,7 +30,12 @@ export interface ConfigurationCascade<S extends ConfigurationSubject, C> {
     merged: C | ErrorLike | null
 }
 
-/** A subject and its settings. */
+/**
+ * A subject and its settings.
+ *
+ * @template S the configuration subject type
+ * @template C the settings type
+ */
 export interface ConfiguredSubject<S extends ConfigurationSubject, C> {
     /** The subject. */
     subject: S

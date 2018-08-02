@@ -26,18 +26,18 @@ export class ExtensionCard<S extends ConfigurationSubject, C> extends React.Pure
     public render(): JSX.Element | null {
         const { node, ...props } = this.props
         return (
-            <div className="configured-extension-node-card col-sm-6 col-md-6 col-lg-4 pb-4">
-                <div className="configured-extension-node-card__card card">
+            <div className="col-sm-6 col-md-6 col-lg-4 pb-4">
+                <div className="extension-card card">
                     <LinkOrSpan
                         to={node.registryExtension && node.registryExtension.url}
-                        className="card-body configured-extension-node-card__card-body d-flex flex-column"
+                        className="card-body extension-card-body d-flex flex-column"
                     >
-                        <h4 className="card-title configured-extension-node-card__card-body-title mb-0">
+                        <h4 className="card-title extension-card-body-title mb-0">
                             {node.manifest && !isErrorLike(node.manifest) && node.manifest.title
                                 ? node.manifest.title
                                 : node.extensionID}
                         </h4>
-                        <div className="configured-extension-node-card__card-body-text d-inline-block mt-1">
+                        <div className="extension-card-body-text d-inline-block mt-1">
                             {node.manifest ? (
                                 isErrorLike(node.manifest) ? (
                                     <span className="text-danger small" title={node.manifest.message}>
@@ -55,7 +55,7 @@ export class ExtensionCard<S extends ConfigurationSubject, C> extends React.Pure
                             )}
                         </div>
                     </LinkOrSpan>
-                    <div className="card-footer configured-extension-node-card__card-footer py-0 pl-0">
+                    <div className="card-footer extension-card-footer py-0 pl-0">
                         <ul className="nav align-items-center">
                             {node.registryExtension &&
                                 node.registryExtension.url && (
@@ -65,7 +65,7 @@ export class ExtensionCard<S extends ConfigurationSubject, C> extends React.Pure
                                         </Link>
                                     </li>
                                 )}
-                            <li className="configured-extension-node-card__card-spacer" />
+                            <li className="extension-card-spacer" />
                             {props.authenticatedUser && (
                                 <>
                                     {node.isAdded &&

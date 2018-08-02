@@ -188,51 +188,59 @@ export class ExtensionConfiguredSubjectItemForRemove<S extends ConfigurationSubj
     }
 }
 
-const ExtensionConfigurationSubjectsDropdownItems: React.SFC<{
-    header?: React.ReactFragment
-    itemComponent: React.ComponentType<{ item: ExtensionConfiguredSubject; onUpdate?: () => void }>
-    items: ExtensionConfiguredSubject[]
-    onUpdate?: () => void
-}> = ({ header, items, itemComponent: Item, ...props }) => {
-    const itemsByType = new Map<
-        ExtensionConfiguredSubject['subject']['subject']['__typename'],
-        ExtensionConfiguredSubject[]
-    >()
-    for (const item of items) {
-        let typeItems = itemsByType.get(item.subject.subject.__typename)
-        if (!typeItems) {
-            typeItems = []
-            itemsByType.set(item.subject.subject.__typename, typeItems)
+class ExtensionConfigurationSubjectsDropdownItems<S extends ConfigurationSubject, C> extends React.PureComponent<
+    {
+        header?: React.ReactFragment
+        itemComponent: React.ComponentType<
+            { item: ExtensionConfiguredSubject; onUpdate?: () => void } & ContextProps<S, C>
+        >
+        items: ExtensionConfiguredSubject[]
+        onUpdate?: () => void
+    } & ContextProps<S, C>
+> {
+    public render(): JSX.Element | null {
+        const { header, items, itemComponent: Item, ...props } = this.props
+
+        const itemsByType = new Map<
+            ExtensionConfiguredSubject['subject']['subject']['__typename'],
+            ExtensionConfiguredSubject[]
+        >()
+        for (const item of items) {
+            let typeItems = itemsByType.get(item.subject.subject.__typename)
+            if (!typeItems) {
+                typeItems = []
+                itemsByType.set(item.subject.subject.__typename, typeItems)
+            }
+            typeItems.push(item)
         }
-        typeItems.push(item)
+        let needsDivider = false
+        return (
+            <>
+                {header && (
+                    <>
+                        <DropdownItem header={true}>{header}</DropdownItem>
+                        <DropdownItem divider={true} />
+                    </>
+                )}
+                {SUBJECT_TYPE_ORDER.map((nodeType, i) => {
+                    const items = itemsByType.get(nodeType)
+                    if (!items) {
+                        return null
+                    }
+                    const neededDivider = needsDivider
+                    needsDivider = items.length > 0
+                    const headerLabel = subjectTypeHeader(nodeType)
+                    return (
+                        <React.Fragment key={i}>
+                            {neededDivider && <DropdownItem divider={true} />}
+                            {headerLabel && <DropdownItem header={true}>{headerLabel}</DropdownItem>}
+                            {items.map((item, i) => <Item key={i} item={item} {...props} />)}
+                        </React.Fragment>
+                    )
+                })}
+            </>
+        )
     }
-    let needsDivider = false
-    return (
-        <>
-            {header && (
-                <>
-                    <DropdownItem header={true}>{header}</DropdownItem>
-                    <DropdownItem divider={true} />
-                </>
-            )}
-            {SUBJECT_TYPE_ORDER.map((nodeType, i) => {
-                const items = itemsByType.get(nodeType)
-                if (!items) {
-                    return null
-                }
-                const neededDivider = needsDivider
-                needsDivider = items.length > 0
-                const headerLabel = subjectTypeHeader(nodeType)
-                return (
-                    <React.Fragment key={i}>
-                        {neededDivider && <DropdownItem divider={true} />}
-                        {headerLabel && <DropdownItem header={true}>{headerLabel}</DropdownItem>}
-                        {items.map((item, i) => <Item key={i} item={item} {...props} />)}
-                    </React.Fragment>
-                )
-            })}
-        </>
-    )
 }
 
 interface ExtensionConfigurationSubjectsFilter {
@@ -272,7 +280,7 @@ function filterItems<S extends ConfigurationSubject>(
     })
 }
 
-interface Props {
+interface Props<S extends ConfigurationSubject, C> extends ContextProps<S, C> {
     /** The extension that this element is for. */
     extension: ConfiguredExtension
 
@@ -289,7 +297,7 @@ interface Props {
     itemFilter: ExtensionConfigurationSubjectsFilter
 
     /** Renders the subject dropdown item. */
-    itemComponent: React.ComponentType<{ item: ExtensionConfiguredSubject }>
+    itemComponent: React.ComponentType<{ item: ExtensionConfiguredSubject } & ContextProps<S, C>>
 
     /** Whether to show the caret on the dropdown toggle. */
     caret?: boolean
@@ -305,7 +313,10 @@ interface State {
 /**
  * Displays a button with a dropdown menu listing the extension configuration subjects of an extension.
  */
-export class ExtensionConfigureButton extends React.PureComponent<Props, State> {
+export class ExtensionConfigureButton<S extends ConfigurationSubject, C> extends React.PureComponent<
+    Props<S, C>,
+    State
+> {
     public state: State = {
         dropdownOpen: false,
     }
@@ -327,6 +338,7 @@ export class ExtensionConfigureButton extends React.PureComponent<Props, State> 
                             })
                         )}
                         onUpdate={this.props.onUpdate}
+                        forxContext={this.props.forxContext}
                     />
                 </DropdownMenu>
             </ButtonDropdown>

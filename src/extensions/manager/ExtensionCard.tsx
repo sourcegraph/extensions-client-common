@@ -6,14 +6,14 @@ import { isErrorLike } from '../../errors'
 import * as GQL from '../../schema/graphqlschema'
 import { ConfigurationSubject } from '../../settings/cascade'
 import { ConfiguredExtension } from '../extension'
-import { ExtensionEnablementToggle } from '../ExtensionEnablementToggle'
 import {
     ADDED_AND_CAN_ADMINISTER,
     ALL_CAN_ADMINISTER,
     ExtensionConfigureButton,
     ExtensionConfiguredSubjectItemForAdd,
     ExtensionConfiguredSubjectItemForRemove,
-} from './extension/ExtensionConfigureButton'
+} from '../ExtensionConfigureButton'
+import { ExtensionEnablementToggle } from '../ExtensionEnablementToggle'
 
 interface Props<S extends ConfigurationSubject, C> extends ContextProps<S, C> {
     node: ConfiguredExtension
@@ -79,6 +79,7 @@ export class ExtensionCard<S extends ConfigurationSubject, C> extends React.Pure
                                                     itemComponent={ExtensionConfiguredSubjectItemForRemove}
                                                     buttonClassName="btn-outline-link btn-sm py-0 mr-1"
                                                     caret={false}
+                                                    forxContext={this.props.forxContext}
                                                 >
                                                     Remove
                                                 </ExtensionConfigureButton>
@@ -91,6 +92,7 @@ export class ExtensionCard<S extends ConfigurationSubject, C> extends React.Pure
                                                 subject={props.authenticatedUser}
                                                 onChange={props.onDidUpdate}
                                                 tabIndex={-1}
+                                                forxContext={this.props.forxContext}
                                             />
                                         </li>
                                     )}
@@ -104,6 +106,7 @@ export class ExtensionCard<S extends ConfigurationSubject, C> extends React.Pure
                                                 itemComponent={ExtensionConfiguredSubjectItemForAdd}
                                                 buttonClassName="btn-primary btn-sm"
                                                 caret={false}
+                                                forxContext={this.props.forxContext}
                                             >
                                                 Add
                                             </ExtensionConfigureButton>

@@ -228,6 +228,7 @@ export class ExtensionsList<S extends ConfigurationSubject, C> extends React.Pur
                                         authenticatedUser={this.props.authenticatedUser}
                                         node={e}
                                         onDidUpdate={this.onDidUpdateExtension}
+                                        forxContext={this.props.forxContext}
                                     />
                                 ))}
                             </div>

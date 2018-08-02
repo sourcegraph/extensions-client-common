@@ -56,20 +56,22 @@ export class ExtensionEnablementToggle<S extends ConfigurationSubject, C> extend
             this.toggles
                 .pipe(
                     switchMap(enabled =>
-                        updateExtensionSettings(this.props.subject, {
-                            extensionID: this.props.extension.extensionID,
-                            enabled,
-                        }).pipe(
-                            mapTo(true),
-                            catchError(error => [asError(error) as ErrorLike]),
-                            map(c => ({ toggleOrError: c } as State)),
-                            tap(() => {
-                                if (this.props.onChange) {
-                                    this.props.onChange(enabled)
-                                }
-                            }),
-                            startWith<State>({ toggleOrError: LOADING })
-                        )
+                        this.props.forxContext
+                            .updateExtensionSettings(this.props.subject, {
+                                extensionID: this.props.extension.extensionID,
+                                enabled,
+                            })
+                            .pipe(
+                                mapTo(true),
+                                catchError(error => [asError(error) as ErrorLike]),
+                                map(c => ({ toggleOrError: c } as State)),
+                                tap(() => {
+                                    if (this.props.onChange) {
+                                        this.props.onChange(enabled)
+                                    }
+                                }),
+                                startWith<State>({ toggleOrError: LOADING })
+                            )
                     )
                 )
                 .subscribe(stateUpdate => this.setState(stateUpdate), error => console.error(error))

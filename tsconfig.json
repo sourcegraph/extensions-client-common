@@ -7,7 +7,8 @@
     "sourceMap": true,
     "declaration": true,
     "noEmit": true,
-    "lib": ["es2018"],
+    "lib": ["dom", "es2018"],
+    "jsx": "react",
     "sourceRoot": "src",
     "noErrorTruncation": true,
     "skipLibCheck": true,
@@ -19,5 +20,5 @@
       }
     ]
   },
-  "exclude": ["lib/**", "module/**"]
+  "exclude": ["lib/**"]
 }

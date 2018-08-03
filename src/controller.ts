@@ -3,7 +3,7 @@ import { catchError, filter, map, startWith, switchMap } from 'rxjs/operators'
 import { Context } from './context'
 import { Settings } from './copypasta'
 import { asError, createAggregateError, ErrorLike, isErrorLike } from './errors'
-import { ConfiguredExtension, isExtensionEnabled } from './extensions/extension'
+import { ConfiguredExtension, isExtensionAdded, isExtensionEnabled } from './extensions/extension'
 import { gql, graphQLContent, GraphQLDocument } from './graphql'
 import { SourcegraphExtension } from './schema/extension.schema'
 import * as GQL from './schema/graphqlschema'
@@ -14,7 +14,7 @@ import { parseJSONCOrError } from './util'
  * A controller that exposes functionality for a configuration cascade and querying extensions from the remote
  * registry.
  */
-export class Controller<S extends ConfigurationSubject, C> {
+export class Controller<S extends ConfigurationSubject, C = Settings> {
     public static readonly LOADING: 'loading' = 'loading'
 
     constructor(public readonly context: Context<S, C>) {}
@@ -130,9 +130,10 @@ export class Controller<S extends ConfigurationSubject, C> {
                     const configuredExtensions: ConfiguredExtension[] = []
                     for (const extensionID of extensionIDs) {
                         const registryExtension = registryExtensions.find(x => x.extensionID === extensionID)
+                        const settingsProperties = toSettingsProperties(cascade, extensionID)
                         configuredExtensions.push({
                             extensionID,
-                            ...toSettingsProperties(cascade, extensionID),
+                            ...settingsProperties,
                             manifest:
                                 registryExtension && registryExtension.manifest
                                     ? parseJSONCOrError(registryExtension.manifest.raw)
@@ -183,8 +184,7 @@ function toSettingsProperties(
             subject,
             settings,
         })),
-        isEnabled:
-            mergedSettings !== null && !isErrorLike(mergedSettings) && isExtensionEnabled(mergedSettings, extensionID),
-        isAdded: mergedSettings !== null,
+        isEnabled: !isErrorLike(mergedSettings) && isExtensionEnabled(mergedSettings, extensionID),
+        isAdded: !isErrorLike(mergedSettings) && isExtensionAdded(mergedSettings, extensionID),
     }
 }

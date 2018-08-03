@@ -47,6 +47,10 @@ export interface ConfiguredExtension<
     registryExtension?: RX
 }
 
-export function isExtensionEnabled(settings: Settings, extensionID: string): boolean {
-    return !!settings.extensions && !!settings.extensions[extensionID]
+export function isExtensionEnabled(settings: Settings | null, extensionID: string): boolean {
+    return !!settings && !!settings.extensions && !!settings.extensions[extensionID]
+}
+
+export function isExtensionAdded(settings: Settings | null, extensionID: string): boolean {
+    return !!settings && !!settings.extensions && extensionID in settings.extensions
 }

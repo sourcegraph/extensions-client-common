@@ -14,7 +14,7 @@ import {
     subjectLabel,
     subjectTypeHeader,
 } from '../settings'
-import { ConfiguredExtension, isExtensionEnabled } from './extension'
+import { ConfiguredExtension, isExtensionAdded, isExtensionEnabled } from './extension'
 
 interface ExtensionConfiguredSubject {
     extension: ConfiguredExtension
@@ -23,7 +23,11 @@ interface ExtensionConfiguredSubject {
 
 /** A dropdown menu item for a extension-subject item that links to the subject's settings.  */
 export class ExtensionConfiguredSubjectItemForConfigure<S extends ConfigurationSubject, C> extends React.PureComponent<
-    { item: ExtensionConfiguredSubject } & ExtensionsProps<S, C>
+    {
+        item: ExtensionConfiguredSubject
+        onUpdate: () => void
+        onComplete: () => void
+    } & ExtensionsProps<S, C>
 > {
     public render(): JSX.Element | null {
         return (
@@ -32,7 +36,7 @@ export class ExtensionConfiguredSubjectItemForConfigure<S extends ConfigurationS
                 to={this.props.item.subject.subject.settingsURL}
             >
                 <span className="mr-4">{subjectLabel(this.props.item.subject.subject)}</span>
-                {this.props.item.subject.settings &&
+                {isExtensionAdded(this.props.item.subject.settings, this.props.item.extension.extensionID) &&
                     !isErrorLike(this.props.item.subject.settings) &&
                     !isExtensionEnabled(this.props.item.subject.settings, this.props.item.extension.extensionID) && (
                         <small className="text-muted">Disabled</small>
@@ -53,7 +57,8 @@ interface ExtensionConfiguredSubjectItemForAddState {
 export class ExtensionConfiguredSubjectItemForAdd<S extends ConfigurationSubject, C> extends React.PureComponent<
     {
         item: ExtensionConfiguredSubject
-        onUpdate?: () => void
+        onUpdate: () => void
+        onComplete: () => void
     } & ExtensionsProps<S, C>,
     ExtensionConfiguredSubjectItemForAddState
 > {
@@ -74,13 +79,10 @@ export class ExtensionConfiguredSubjectItemForAdd<S extends ConfigurationSubject
                             })
                             .pipe(
                                 mapTo(null),
+                                tap(() => this.props.onComplete()),
                                 catchError(error => [asError(error) as ErrorLike]),
                                 map(c => ({ addOrError: c } as ExtensionConfiguredSubjectItemForAddState)),
-                                tap(() => {
-                                    if (this.props.onUpdate) {
-                                        this.props.onUpdate()
-                                    }
-                                }),
+                                tap(() => this.props.onUpdate()),
                                 startWith<ExtensionConfiguredSubjectItemForAddState>({ addOrError: LOADING })
                             )
                     )
@@ -94,10 +96,11 @@ export class ExtensionConfiguredSubjectItemForAdd<S extends ConfigurationSubject
     }
 
     public render(): JSX.Element | null {
+        const isAdded = isExtensionAdded(this.props.item.subject.settings, this.props.item.extension.extensionID)
         return (
             <DropdownItem
                 className="dropdown-item d-flex justify-content-between align-items-center"
-                disabled={this.props.item.subject.settings !== null}
+                disabled={isAdded}
                 onClick={this.onClick}
                 toggle={false}
             >
@@ -108,9 +111,7 @@ export class ExtensionConfiguredSubjectItemForAdd<S extends ConfigurationSubject
                             <this.props.extensions.context.icons.Warning className="icon-inline" /> Error
                         </small>
                     )}
-                    {this.props.item.subject.settings !== null && (
-                        <span className="small text-muted">Already added</span>
-                    )}
+                    {isAdded && <span className="small text-muted">Already added</span>}
                 </div>
             </DropdownItem>
         )
@@ -130,7 +131,8 @@ interface ExtensionConfiguredSubjectItemForRemoveState {
 export class ExtensionConfiguredSubjectItemForRemove<S extends ConfigurationSubject, C> extends React.PureComponent<
     {
         item: ExtensionConfiguredSubject
-        onUpdate?: () => void
+        onUpdate: () => void
+        onComplete: () => void
     } & ExtensionsProps<S, C>,
     ExtensionConfiguredSubjectItemForRemoveState
 > {
@@ -151,13 +153,10 @@ export class ExtensionConfiguredSubjectItemForRemove<S extends ConfigurationSubj
                             })
                             .pipe(
                                 mapTo(null),
+                                tap(() => this.props.onComplete()),
                                 catchError(error => [asError(error) as ErrorLike]),
                                 map(c => ({ removeOrError: c } as ExtensionConfiguredSubjectItemForRemoveState)),
-                                tap(() => {
-                                    if (this.props.onUpdate) {
-                                        this.props.onUpdate()
-                                    }
-                                }),
+                                tap(() => this.props.onUpdate()),
                                 startWith<ExtensionConfiguredSubjectItemForRemoveState>({ removeOrError: LOADING })
                             )
                     )
@@ -196,13 +195,18 @@ export class ExtensionConfiguredSubjectItemForRemove<S extends ConfigurationSubj
 
 class ExtensionConfigurationSubjectsDropdownItems<S extends ConfigurationSubject, C> extends React.PureComponent<
     {
-        header?: React.ReactFragment
-        itemComponent: React.ComponentType<
-            { item: ExtensionConfiguredSubject; onUpdate?: () => void } & ExtensionsProps<S, C>
-        >
         items: ExtensionConfiguredSubject[]
-        onUpdate?: () => void
-    } & ExtensionsProps<S, C>
+
+        /**
+         * Closes the dropdown menu. This is necessary because the menu must remain open after the user selects an
+         * item that starts an operation. If it immediately closed, then the component's componentWillUnmount would
+         * be called and the in-progress operation would be canceled (i.e., the HTTP request would be canceled,
+         * probably before it reached the server). Also, if the operation failed, the user would not get any
+         * feedback about the error (because it is shown in the menu item).
+         */
+        onComplete: () => void
+    } & Pick<Props<S, C>, 'header' | 'itemComponent' | 'onUpdate'> &
+        ExtensionsProps<S, C>
 > {
     public render(): JSX.Element | null {
         const { header, items, itemComponent: Item, ...props } = this.props
@@ -267,12 +271,13 @@ export const ADDED_AND_CAN_ADMINISTER: ExtensionConfigurationSubjectsFilter = {
     onlyIfViewerCanAdminister: true,
 }
 
-function filterItems<S extends ConfigurationSubject>(
+export function filterItems<S extends ConfigurationSubject>(
+    extensionID: string,
     items: ConfiguredSubject<S>[],
     filter: ExtensionConfigurationSubjectsFilter
 ): ConfiguredSubject<S>[] {
     return items.filter(item => {
-        const isAdded = item.settings !== null
+        const isAdded = isExtensionAdded(item.settings, extensionID)
         if (isAdded && !filter.added) {
             return false
         }
@@ -303,13 +308,19 @@ interface Props<S extends ConfigurationSubject, C> extends ExtensionsProps<S, C>
     itemFilter: ExtensionConfigurationSubjectsFilter
 
     /** Renders the subject dropdown item. */
-    itemComponent: React.ComponentType<{ item: ExtensionConfiguredSubject } & ExtensionsProps<S, C>>
+    itemComponent: React.ComponentType<
+        {
+            item: ExtensionConfiguredSubject
+            onUpdate: () => void
+            onComplete: () => void
+        } & ExtensionsProps<S, C>
+    >
 
     /** Whether to show the caret on the dropdown toggle. */
     caret?: boolean
 
     /** Called when the component performs an update that requires the parent component to refresh data. */
-    onUpdate?: () => void
+    onUpdate: () => void
 }
 
 interface State {
@@ -337,13 +348,16 @@ export class ExtensionConfigureButton<S extends ConfigurationSubject, C> extends
                     <ExtensionConfigurationSubjectsDropdownItems
                         header={this.props.header}
                         itemComponent={this.props.itemComponent}
-                        items={filterItems(this.props.extension.settingsCascade, this.props.itemFilter).map(
-                            subject => ({
-                                subject,
-                                extension: this.props.extension,
-                            })
-                        )}
+                        items={filterItems(
+                            this.props.extension.extensionID,
+                            this.props.extension.settingsCascade,
+                            this.props.itemFilter
+                        ).map(subject => ({
+                            subject,
+                            extension: this.props.extension,
+                        }))}
                         onUpdate={this.props.onUpdate}
+                        onComplete={this.onComplete}
                         extensions={this.props.extensions}
                     />
                 </DropdownMenu>
@@ -354,4 +368,6 @@ export class ExtensionConfigureButton<S extends ConfigurationSubject, C> extends
     private toggle = () => {
         this.setState(prevState => ({ dropdownOpen: !prevState.dropdownOpen }))
     }
+
+    private onComplete = () => this.setState({ dropdownOpen: false })
 }

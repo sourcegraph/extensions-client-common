@@ -3,7 +3,11 @@
     background-color: var(--extension-card-bg);
 }
 
-.extension-card .extension-card-spacer {
+.extension-card .extension-card-body-title {
+    color: var(--body-color) !important;
+}
+
+.extension-card .extension-card .extension-card-spacer {
     flex: 1;
 }
 

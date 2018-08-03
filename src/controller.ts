@@ -7,7 +7,7 @@ import { ConfiguredExtension } from './extensions/extension'
 import { gql, graphQLContent, GraphQLDocument } from './graphql'
 import { SourcegraphExtension } from './schema/extension.schema'
 import * as GQL from './schema/graphqlschema'
-import { ConfigurationCascade, ConfigurationSubject } from './settings/cascade'
+import { ConfigurationCascade, ConfigurationSubject } from './settings'
 import { parseJSONCOrError } from './util'
 
 /**

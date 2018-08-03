@@ -2,7 +2,7 @@ import { ExtensionSettings } from '../copypasta'
 import { ErrorLike } from '../errors'
 import { SourcegraphExtension } from '../schema/extension.schema'
 import * as GQL from '../schema/graphqlschema'
-import { ConfigurationSubject, ConfiguredSubject } from '../settings/cascade'
+import { ConfigurationSubject, ConfiguredSubject } from '../settings'
 
 /**
  * Describes a configured extension.

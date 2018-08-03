@@ -13,7 +13,7 @@ import {
     SUBJECT_TYPE_ORDER,
     subjectLabel,
     subjectTypeHeader,
-} from '../settings/cascade'
+} from '../settings'
 import { ConfiguredExtension } from './extension'
 
 interface ExtensionConfiguredSubject {

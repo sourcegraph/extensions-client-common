@@ -5,7 +5,7 @@ import { Toggle } from '../components/Toggle'
 import { ExtensionsProps } from '../context'
 import { asError, ErrorLike, isErrorLike } from '../errors'
 import * as GQL from '../schema/graphqlschema'
-import { ConfigurationSubject } from '../settings/cascade'
+import { ConfigurationSubject } from '../settings'
 import { ConfiguredExtension } from './extension'
 
 interface Props<S extends ConfigurationSubject, C> extends ExtensionsProps<S, C> {

@@ -4,7 +4,7 @@ import { LinkOrSpan } from '../../components/LinkOrSpan'
 import { ExtensionsProps } from '../../context'
 import { isErrorLike } from '../../errors'
 import * as GQL from '../../schema/graphqlschema'
-import { ConfigurationSubject } from '../../settings/cascade'
+import { ConfigurationSubject } from '../../settings'
 import { ConfiguredExtension } from '../extension'
 import {
     ADDED_AND_CAN_ADMINISTER,

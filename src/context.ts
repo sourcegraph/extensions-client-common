@@ -2,7 +2,7 @@ import { Observable } from 'rxjs'
 import { Controller } from './controller'
 import { QueryResult } from './graphql'
 import * as GQL from './schema/graphqlschema'
-import { ConfigurationCascade, ConfigurationSubject } from './settings/cascade'
+import { ConfigurationCascade, ConfigurationSubject } from './settings'
 
 /**
  * Description of the context in which extensions-client-common is running, and platform-specific hooks.

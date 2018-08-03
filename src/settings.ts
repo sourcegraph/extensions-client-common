@@ -1,10 +1,10 @@
 import { isEqual } from 'lodash-es'
 import { Observable } from 'rxjs'
 import { distinctUntilChanged, map } from 'rxjs/operators'
-import { Settings } from '../copypasta'
-import { ErrorLike } from '../errors'
-import * as GQL from '../schema/graphqlschema'
-import { parseJSONCOrError } from '../util'
+import { Settings } from './copypasta'
+import { ErrorLike } from './errors'
+import * as GQL from './schema/graphqlschema'
+import { parseJSONCOrError } from './util'
 
 /**
  * A configuration subject is something that can have settings associated with it, such as a site ("global

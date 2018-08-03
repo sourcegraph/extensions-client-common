@@ -16,7 +16,7 @@ import { ExtensionsProps } from '../../context'
 import { asError, createAggregateError, ErrorLike, isErrorLike } from '../../errors'
 import { gql, graphQLContent } from '../../graphql'
 import * as GQL from '../../schema/graphqlschema'
-import { ConfigurationSubject } from '../../settings/cascade'
+import { ConfigurationSubject } from '../../settings'
 import { ConfiguredExtension } from '../extension'
 import { ExtensionCard } from './ExtensionCard'
 

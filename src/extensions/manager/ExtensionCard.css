@@ -7,7 +7,7 @@
     color: var(--body-color) !important;
 }
 
-.extension-card .extension-card .extension-card-spacer {
+.extension-card .extension-card-spacer {
     flex: 1;
 }
 

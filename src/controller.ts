@@ -1,15 +1,14 @@
-import { isEqual } from 'lodash-es'
 import { combineLatest, Observable, of, throwError } from 'rxjs'
-import { catchError, distinctUntilChanged, filter, map, startWith, switchMap } from 'rxjs/operators'
+import { catchError, filter, map, startWith, switchMap } from 'rxjs/operators'
 import { Context } from './context'
 import { ExtensionSettings, Settings } from './copypasta'
 import { asError, createAggregateError, ErrorLike, isErrorLike } from './errors'
 import { ConfiguredExtension } from './extensions/extension'
-import { gql, GraphQLDocument } from './graphql'
+import { gql, graphQLContent, GraphQLDocument } from './graphql'
 import { SourcegraphExtension } from './schema/extension.schema'
 import * as GQL from './schema/graphqlschema'
 import { ConfigurationCascade, ConfigurationSubject } from './settings/cascade'
-import { parseJSON } from './util'
+import { parseJSONCOrError } from './util'
 
 /**
  * A controller that exposes functionality for a configuration cascade and querying extensions from the remote
@@ -18,26 +17,11 @@ import { parseJSON } from './util'
 export class Controller<S extends ConfigurationSubject, C> {
     public static readonly LOADING: 'loading' = 'loading'
 
-    constructor(private context: Context<S, C>, private gqlCascade: Observable<GQL.IConfigurationCascade>) {}
-
-    public readonly cascade: Observable<ConfigurationCascade<ConfigurationSubject, Settings>> = this.gqlCascade.pipe(
-        map(
-            ({ subjects, merged }) =>
-                ({
-                    subjects: subjects.map(({ latestSettings, ...subject }) => ({
-                        subject,
-                        settings: latestSettings && parseJSONCOrError<Settings>(latestSettings.configuration.contents),
-                    })),
-                    // TODO(sqs): perform the merging on the client side too so we can merge in settings that are never stored on Sourcegraph
-                    merged: parseJSONCOrError<Settings>(merged.contents),
-                } as ConfigurationCascade<ConfigurationSubject, Settings>)
-        ),
-        distinctUntilChanged((a, b) => isEqual(a, b))
-    )
+    constructor(public readonly context: Context<S, C>) {}
 
     private readonly viewerConfiguredExtensionsOrLoading: Observable<
         typeof Controller.LOADING | ConfiguredExtension[] | ErrorLike
-    > = this.cascade.pipe(
+    > = this.context.configurationCascade.pipe(
         switchMap(
             cascade =>
                 isErrorLike(cascade.merged)
@@ -58,7 +42,7 @@ export class Controller<S extends ConfigurationSubject, C> {
 
     public forExtensionID(
         extensionID: string,
-        registryExtensionFragment: GraphQLDocument
+        registryExtensionFragment: GraphQLDocument | string
     ): Observable<ConfiguredExtension> {
         return this.context
             .queryGraphQL(
@@ -71,7 +55,7 @@ export class Controller<S extends ConfigurationSubject, C> {
                         }
                     }
                     ${registryExtensionFragment}
-                `,
+                `[graphQLContent],
                 { extensionID }
             )
             .pipe(
@@ -116,7 +100,7 @@ export class Controller<S extends ConfigurationSubject, C> {
                             }
                         }
                     }
-                `,
+                `[graphQLContent],
                 {
                     first: extensionIDs.length,
                     prioritizeExtensionIDs: extensionIDs,
@@ -167,7 +151,7 @@ export class Controller<S extends ConfigurationSubject, C> {
     public withConfiguration(
         registryExtensions: Observable<GQL.IRegistryExtension[]>
     ): Observable<ConfiguredExtension[]> {
-        return combineLatest(registryExtensions, this.cascade).pipe(
+        return combineLatest(registryExtensions, this.context.configurationCascade).pipe(
             map(([registryExtensions, cascade]) => {
                 const configuredExtensions: ConfiguredExtension[] = []
                 for (const registryExtension of registryExtensions) {
@@ -218,12 +202,4 @@ function getExtensionSettings(
         return settings.extensions[extensionID]
     }
     return null
-}
-
-function parseJSONCOrError<T>(input: string): T | ErrorLike {
-    try {
-        return parseJSON(input) as T
-    } catch (err) {
-        return asError(err)
-    }
 }

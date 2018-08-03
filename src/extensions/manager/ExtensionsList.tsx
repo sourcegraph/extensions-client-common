@@ -12,9 +12,9 @@ import {
     takeUntil,
     withLatestFrom,
 } from 'rxjs/operators'
-import { ContextProps, ExtensionsProps } from '../../context'
+import { ExtensionsProps } from '../../context'
 import { asError, createAggregateError, ErrorLike, isErrorLike } from '../../errors'
-import { gql } from '../../graphql'
+import { gql, graphQLContent } from '../../graphql'
 import * as GQL from '../../schema/graphqlschema'
 import { ConfigurationSubject } from '../../settings/cascade'
 import { ConfiguredExtension } from '../extension'
@@ -57,7 +57,7 @@ export const registryExtensionFragment = gql`
 `
 
 interface Props<S extends ConfigurationSubject, C>
-    extends ContextProps<S, C>,
+    extends ExtensionsProps<S, C>,
         ExtensionsProps<S, C>,
         RouteComponentProps<{}> {
     authenticatedUser: GQL.IUser | null
@@ -204,7 +204,7 @@ export class ExtensionsList<S extends ConfigurationSubject, C> extends React.Pur
                     </div>
                 </form>
                 {this.state.data.resultOrError === LOADING ? (
-                    <this.props.extensionsContext.icons.Loader className="icon-inline" />
+                    <this.props.extensions.context.icons.Loader className="icon-inline" />
                 ) : isErrorLike(this.state.data.resultOrError) ? (
                     <div className="alert alert-danger">{this.state.data.resultOrError.message}</div>
                 ) : (
@@ -228,7 +228,7 @@ export class ExtensionsList<S extends ConfigurationSubject, C> extends React.Pur
                                         authenticatedUser={this.props.authenticatedUser}
                                         node={e}
                                         onDidUpdate={this.onDidUpdateExtension}
-                                        extensionsContext={this.props.extensionsContext}
+                                        extensions={this.props.extensions}
                                     />
                                 ))}
                             </div>
@@ -250,7 +250,7 @@ export class ExtensionsList<S extends ConfigurationSubject, C> extends React.Pur
             take(1),
 
             switchMap(viewerExtensions =>
-                this.props.extensionsContext
+                this.props.extensions.context
                     .queryGraphQL(
                         gql`
                             query RegistryExtensions($query: String, $prioritizeExtensionIDs: [String!]!) {
@@ -264,7 +264,7 @@ export class ExtensionsList<S extends ConfigurationSubject, C> extends React.Pur
                                 }
                             }
                             ${registryExtensionFragment}
-                        `,
+                        `[graphQLContent],
                         {
                             ...args,
                             prioritizeExtensionIDs: viewerExtensions.map(({ extensionID }) => extensionID),

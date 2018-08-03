@@ -1,5 +1,5 @@
 import { parse, ParseError, ParseErrorCode } from '@sqs/jsonc-parser/lib/main'
-import { createAggregateError } from './errors'
+import { asError, createAggregateError, ErrorLike } from './errors'
 
 /**
  * Parses the JSON input using an error-tolerant "jsonc" parser.
@@ -17,4 +17,12 @@ export function parseJSON(text: string): any {
         )
     }
     return o
+}
+
+export function parseJSONCOrError<T>(input: string): T | ErrorLike {
+    try {
+        return parseJSON(input) as T
+    } catch (err) {
+        return asError(err)
+    }
 }

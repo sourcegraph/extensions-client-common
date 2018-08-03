@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { Link } from 'react-router-dom'
 import { LinkOrSpan } from '../../components/LinkOrSpan'
-import { ContextProps } from '../../context'
+import { ExtensionsProps } from '../../context'
 import { isErrorLike } from '../../errors'
 import * as GQL from '../../schema/graphqlschema'
 import { ConfigurationSubject } from '../../settings/cascade'
@@ -15,7 +15,7 @@ import {
 } from '../ExtensionConfigureButton'
 import { ExtensionEnablementToggle } from '../ExtensionEnablementToggle'
 
-interface Props<S extends ConfigurationSubject, C> extends ContextProps<S, C> {
+interface Props<S extends ConfigurationSubject, C> extends ExtensionsProps<S, C> {
     node: ConfiguredExtension
     authenticatedUser: GQL.IUser | null
     onDidUpdate: () => void
@@ -41,7 +41,8 @@ export class ExtensionCard<S extends ConfigurationSubject, C> extends React.Pure
                             {node.manifest ? (
                                 isErrorLike(node.manifest) ? (
                                     <span className="text-danger small" title={node.manifest.message}>
-                                        <props.extensionsContext.icons.Warning className="icon-inline" /> Invalid manifest
+                                        <props.extensions.context.icons.Warning className="icon-inline" /> Invalid
+                                        manifest
                                     </span>
                                 ) : (
                                     node.manifest.description && (
@@ -50,7 +51,7 @@ export class ExtensionCard<S extends ConfigurationSubject, C> extends React.Pure
                                 )
                             ) : (
                                 <span className="text-warning small">
-                                    <props.extensionsContext.icons.Warning className="icon-inline" /> No manifest
+                                    <props.extensions.context.icons.Warning className="icon-inline" /> No manifest
                                 </span>
                             )}
                         </div>
@@ -79,7 +80,7 @@ export class ExtensionCard<S extends ConfigurationSubject, C> extends React.Pure
                                                     itemComponent={ExtensionConfiguredSubjectItemForRemove}
                                                     buttonClassName="btn-outline-link btn-sm py-0 mr-1"
                                                     caret={false}
-                                                    extensionsContext={this.props.extensionsContext}
+                                                    extensions={this.props.extensions}
                                                 >
                                                     Remove
                                                 </ExtensionConfigureButton>
@@ -92,7 +93,7 @@ export class ExtensionCard<S extends ConfigurationSubject, C> extends React.Pure
                                                 subject={props.authenticatedUser}
                                                 onChange={props.onDidUpdate}
                                                 tabIndex={-1}
-                                                extensionsContext={this.props.extensionsContext}
+                                                extensions={this.props.extensions}
                                             />
                                         </li>
                                     )}
@@ -106,7 +107,7 @@ export class ExtensionCard<S extends ConfigurationSubject, C> extends React.Pure
                                                 itemComponent={ExtensionConfiguredSubjectItemForAdd}
                                                 buttonClassName="btn-primary btn-sm"
                                                 caret={false}
-                                                extensionsContext={this.props.extensionsContext}
+                                                extensions={this.props.extensions}
                                             >
                                                 Add
                                             </ExtensionConfigureButton>

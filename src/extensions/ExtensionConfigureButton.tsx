@@ -4,7 +4,7 @@ import { ButtonDropdown, DropdownMenu, DropdownToggle } from 'reactstrap'
 import DropdownItem from 'reactstrap/lib/DropdownItem'
 import { Subject, Subscription } from 'rxjs'
 import { catchError, map, mapTo, startWith, switchMap, tap } from 'rxjs/operators'
-import { ContextProps } from '../context'
+import { ExtensionsProps } from '../context'
 import { ExtensionSettings } from '../copypasta'
 import { asError, ErrorLike, isErrorLike } from '../errors'
 import {
@@ -22,19 +22,23 @@ interface ExtensionConfiguredSubject {
 }
 
 /** A dropdown menu item for a extension-subject item that links to the subject's settings.  */
-export const ExtensionConfiguredSubjectItemForConfigure: React.SFC<{ item: ExtensionConfiguredSubject }> = ({
-    item,
-}) => (
-    <Link
-        className="dropdown-item d-flex justify-content-between align-items-center"
-        to={item.subject.subject.settingsURL}
-    >
-        <span className="mr-4">{subjectLabel(item.subject.subject)}</span>
-        {item.subject.settings &&
-            !isErrorLike(item.subject.settings) &&
-            !!item.subject.settings.disabled && <small className="text-muted">Disabled</small>}
-    </Link>
-)
+export class ExtensionConfiguredSubjectItemForConfigure<S extends ConfigurationSubject, C> extends React.PureComponent<
+    { item: ExtensionConfiguredSubject } & ExtensionsProps<S, C>
+> {
+    public render(): JSX.Element | null {
+        return (
+            <Link
+                className="dropdown-item d-flex justify-content-between align-items-center"
+                to={this.props.item.subject.subject.settingsURL}
+            >
+                <span className="mr-4">{subjectLabel(this.props.item.subject.subject)}</span>
+                {this.props.item.subject.settings &&
+                    !isErrorLike(this.props.item.subject.settings) &&
+                    !!this.props.item.subject.settings.disabled && <small className="text-muted">Disabled</small>}
+            </Link>
+        )
+    }
+}
 
 const LOADING: 'loading' = 'loading'
 
@@ -48,7 +52,7 @@ export class ExtensionConfiguredSubjectItemForAdd<S extends ConfigurationSubject
     {
         item: ExtensionConfiguredSubject
         onUpdate?: () => void
-    } & ContextProps<S, C>,
+    } & ExtensionsProps<S, C>,
     ExtensionConfiguredSubjectItemForAddState
 > {
     public state: ExtensionConfiguredSubjectItemForAddState = { addOrError: null }
@@ -61,7 +65,7 @@ export class ExtensionConfiguredSubjectItemForAdd<S extends ConfigurationSubject
             this.addClicks
                 .pipe(
                     switchMap(() =>
-                        this.props.extensionsContext
+                        this.props.extensions.context
                             .updateExtensionSettings(this.props.item.subject.subject, {
                                 extensionID: this.props.item.extension.extensionID,
                                 enabled: true,
@@ -99,7 +103,7 @@ export class ExtensionConfiguredSubjectItemForAdd<S extends ConfigurationSubject
                 <div>
                     {isErrorLike(this.state.addOrError) && (
                         <small className="text-danger" title={this.state.addOrError.message}>
-                            <this.props.extensionsContext.icons.Warning className="icon-inline" /> Error
+                            <this.props.extensions.context.icons.Warning className="icon-inline" /> Error
                         </small>
                     )}
                     {this.props.item.subject.settings !== null && (
@@ -125,7 +129,7 @@ export class ExtensionConfiguredSubjectItemForRemove<S extends ConfigurationSubj
     {
         item: ExtensionConfiguredSubject
         onUpdate?: () => void
-    } & ContextProps<S, C>,
+    } & ExtensionsProps<S, C>,
     ExtensionConfiguredSubjectItemForRemoveState
 > {
     public state: ExtensionConfiguredSubjectItemForRemoveState = { removeOrError: null }
@@ -138,7 +142,7 @@ export class ExtensionConfiguredSubjectItemForRemove<S extends ConfigurationSubj
             this.removeClicks
                 .pipe(
                     switchMap(() =>
-                        this.props.extensionsContext
+                        this.props.extensions.context
                             .updateExtensionSettings(this.props.item.subject.subject, {
                                 extensionID: this.props.item.extension.extensionID,
                                 remove: true,
@@ -175,7 +179,7 @@ export class ExtensionConfiguredSubjectItemForRemove<S extends ConfigurationSubj
                 <div>
                     {isErrorLike(this.state.removeOrError) && (
                         <small className="text-danger" title={this.state.removeOrError.message}>
-                            <this.props.extensionsContext.icons.Warning className="icon-inline" /> Error
+                            <this.props.extensions.context.icons.Warning className="icon-inline" /> Error
                         </small>
                     )}
                 </div>
@@ -192,11 +196,11 @@ class ExtensionConfigurationSubjectsDropdownItems<S extends ConfigurationSubject
     {
         header?: React.ReactFragment
         itemComponent: React.ComponentType<
-            { item: ExtensionConfiguredSubject; onUpdate?: () => void } & ContextProps<S, C>
+            { item: ExtensionConfiguredSubject; onUpdate?: () => void } & ExtensionsProps<S, C>
         >
         items: ExtensionConfiguredSubject[]
         onUpdate?: () => void
-    } & ContextProps<S, C>
+    } & ExtensionsProps<S, C>
 > {
     public render(): JSX.Element | null {
         const { header, items, itemComponent: Item, ...props } = this.props
@@ -280,7 +284,7 @@ function filterItems<S extends ConfigurationSubject>(
     })
 }
 
-interface Props<S extends ConfigurationSubject, C> extends ContextProps<S, C> {
+interface Props<S extends ConfigurationSubject, C> extends ExtensionsProps<S, C> {
     /** The extension that this element is for. */
     extension: ConfiguredExtension
 
@@ -297,7 +301,7 @@ interface Props<S extends ConfigurationSubject, C> extends ContextProps<S, C> {
     itemFilter: ExtensionConfigurationSubjectsFilter
 
     /** Renders the subject dropdown item. */
-    itemComponent: React.ComponentType<{ item: ExtensionConfiguredSubject } & ContextProps<S, C>>
+    itemComponent: React.ComponentType<{ item: ExtensionConfiguredSubject } & ExtensionsProps<S, C>>
 
     /** Whether to show the caret on the dropdown toggle. */
     caret?: boolean
@@ -338,7 +342,7 @@ export class ExtensionConfigureButton<S extends ConfigurationSubject, C> extends
                             })
                         )}
                         onUpdate={this.props.onUpdate}
-                        extensionsContext={this.props.extensionsContext}
+                        extensions={this.props.extensions}
                     />
                 </DropdownMenu>
             </ButtonDropdown>

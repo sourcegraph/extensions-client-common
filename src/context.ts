@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs'
 import { Controller } from './controller'
-import { GraphQLDocument, QueryResult } from './graphql'
+import { QueryResult } from './graphql'
 import * as GQL from './schema/graphqlschema'
 import { ConfigurationCascade, ConfigurationSubject } from './settings/cascade'
 
@@ -33,7 +33,7 @@ export interface Context<S extends ConfigurationSubject, C> {
      * @return Observable that emits the result or an error if the HTTP request failed
      */
     queryGraphQL(
-        request: GraphQLDocument,
+        request: string,
         variables?: { [name: string]: any }
     ): Observable<QueryResult<Pick<GQL.IQuery, 'extensionRegistry'>>>
 
@@ -42,13 +42,6 @@ export interface Context<S extends ConfigurationSubject, C> {
      * content.
      */
     readonly icons: Record<'Loader' | 'Warning', React.ComponentType<{ className: 'icon-inline' }>>
-}
-
-/**
- * React partial props for components needing Context.
- */
-export interface ContextProps<S extends ConfigurationSubject, C> {
-    extensionsContext: Context<S, C>
 }
 
 /**

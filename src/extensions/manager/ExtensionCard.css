@@ -1,21 +1,21 @@
-.extension-card {
+.card.extension-card {
     min-height: 9rem;
     background-color: var(--extension-card-bg);
 }
 
-.extension-card-spacer {
+.extension-card .extension-card-spacer {
     flex: 1;
 }
 
-.extension-card-footer {
+.extension-card .extension-card-footer {
     background: unset;
 }
 
-.extension-card-body:hover {
+.extension-card .extension-card-body:hover {
     text-decoration: none;
 }
-.extension-card-body:hover .extension-card-body-title,
-.extension-card-body:focus .extension-card-body-title {
+.extension-card .extension-card-body:hover .extension-card-body-title,
+.extension-card .extension-card-body:focus .extension-card-body-title {
     text-decoration: underline;
     color: var(--link-hover-color);
 }

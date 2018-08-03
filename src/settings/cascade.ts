@@ -1,5 +1,10 @@
+import { isEqual } from 'lodash-es'
+import { Observable } from 'rxjs'
+import { distinctUntilChanged, map } from 'rxjs/operators'
+import { Settings } from '../copypasta'
 import { ErrorLike } from '../errors'
 import * as GQL from '../schema/graphqlschema'
+import { parseJSONCOrError } from '../util'
 
 /**
  * A configuration subject is something that can have settings associated with it, such as a site ("global
@@ -9,7 +14,7 @@ export type ConfigurationSubject = Pick<GQL.IConfigurationSubject, 'id' | 'setti
     (
         | Pick<GQL.IUser, '__typename' | 'username' | 'displayName'>
         | Pick<GQL.IOrg, '__typename' | 'name' | 'displayName'>
-        | Pick<GQL.ISite, '__typename' | 'siteID'>)
+        | Pick<GQL.ISite, '__typename'>)
 
 /**
  * A cascade of settings from multiple subjects, from lowest precedence to highest precedence, and the final
@@ -47,6 +52,25 @@ export interface ConfiguredSubject<S extends ConfigurationSubject, C> {
      * null if there are no settings.
      */
     settings: C | ErrorLike | null
+}
+
+export function gqlToCascade(
+    gqlCascade: Observable<GQL.IConfigurationCascade>
+): Observable<ConfigurationCascade<ConfigurationSubject, Settings>> {
+    return gqlCascade.pipe(
+        map(
+            ({ subjects, merged }) =>
+                ({
+                    subjects: subjects.map(({ latestSettings, ...subject }) => ({
+                        subject,
+                        settings: latestSettings && parseJSONCOrError<Settings>(latestSettings.configuration.contents),
+                    })),
+                    // TODO(sqs): perform the merging on the client side too so we can merge in settings that are never stored on Sourcegraph
+                    merged: parseJSONCOrError<Settings>(merged.contents),
+                } as ConfigurationCascade<ConfigurationSubject, Settings>)
+        ),
+        distinctUntilChanged((a, b) => isEqual(a, b))
+    )
 }
 
 /**

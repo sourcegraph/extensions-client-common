@@ -2,13 +2,13 @@ import * as React from 'react'
 import { Subject, Subscription } from 'rxjs'
 import { catchError, distinctUntilChanged, map, mapTo, startWith, switchMap, tap } from 'rxjs/operators'
 import { Toggle } from '../components/Toggle'
-import { ContextProps } from '../context'
+import { ExtensionsProps } from '../context'
 import { asError, ErrorLike, isErrorLike } from '../errors'
 import * as GQL from '../schema/graphqlschema'
 import { ConfigurationSubject } from '../settings/cascade'
 import { ConfiguredExtension } from './extension'
 
-interface Props<S extends ConfigurationSubject, C> extends ContextProps<S, C> {
+interface Props<S extends ConfigurationSubject, C> extends ExtensionsProps<S, C> {
     extension: ConfiguredExtension
 
     /** The subject whose settings are edited when the user toggles enablement using this component. */
@@ -56,7 +56,7 @@ export class ExtensionEnablementToggle<S extends ConfigurationSubject, C> extend
             this.toggles
                 .pipe(
                     switchMap(enabled =>
-                        this.props.extensionsContext
+                        this.props.extensions.context
                             .updateExtensionSettings(this.props.subject, {
                                 extensionID: this.props.extension.extensionID,
                                 enabled,
@@ -98,7 +98,7 @@ export class ExtensionEnablementToggle<S extends ConfigurationSubject, C> extend
             <div className="d-flex align-items-center">
                 {isErrorLike(this.state.toggleOrError) && (
                     <span className="text-danger" title={this.state.toggleOrError.message}>
-                        <this.props.extensionsContext.icons.Warning className="icon-inline" />
+                        <this.props.extensions.context.icons.Warning className="icon-inline" />
                     </span>
                 )}
                 <Toggle

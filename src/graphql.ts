@@ -1,6 +1,6 @@
 import * as GQL from './schema/graphqlschema'
 
-const graphQLContent = Symbol('graphQLContent')
+export const graphQLContent = Symbol('graphQLContent')
 export interface GraphQLDocument {
     [graphQLContent]: string
 }
@@ -16,6 +16,6 @@ export const gql = (template: TemplateStringsArray, ...substitutions: any[]): Gr
  * The response from a GraphQL API query.
  */
 export interface QueryResult<D extends Partial<GQL.IQuery>> {
-    data?: GQL.IQuery
+    data?: D
     errors?: GQL.IGraphQLResponseError[]
 }

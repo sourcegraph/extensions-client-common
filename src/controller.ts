@@ -1,9 +1,9 @@
 import { combineLatest, Observable, of, throwError } from 'rxjs'
 import { catchError, filter, map, startWith, switchMap } from 'rxjs/operators'
 import { Context } from './context'
-import { ExtensionSettings, Settings } from './copypasta'
+import { Settings } from './copypasta'
 import { asError, createAggregateError, ErrorLike, isErrorLike } from './errors'
-import { ConfiguredExtension } from './extensions/extension'
+import { ConfiguredExtension, isExtensionEnabled } from './extensions/extension'
 import { gql, graphQLContent, GraphQLDocument } from './graphql'
 import { SourcegraphExtension } from './schema/extension.schema'
 import * as GQL from './schema/graphqlschema'
@@ -176,30 +176,15 @@ function toSettingsProperties(
     cascade: ConfigurationCascade<ConfigurationSubject, Settings>,
     extensionID: string
 ): Pick<ConfiguredExtension, 'settings' | 'settingsCascade' | 'isEnabled' | 'isAdded'> {
-    const settings = getExtensionSettings(cascade.merged, extensionID)
+    const mergedSettings = cascade.merged
     return {
-        settings,
+        settings: mergedSettings,
         settingsCascade: cascade.subjects.map(({ subject, settings }) => ({
             subject,
-            settings: getExtensionSettings(settings, extensionID),
+            settings,
         })),
-        isEnabled: settings !== null && !isErrorLike(settings) && !settings.disabled,
-        isAdded: settings !== null,
+        isEnabled:
+            mergedSettings !== null && !isErrorLike(mergedSettings) && isExtensionEnabled(mergedSettings, extensionID),
+        isAdded: mergedSettings !== null,
     }
-}
-
-function getExtensionSettings(
-    settings: Settings | ErrorLike | null,
-    extensionID: string
-): ExtensionSettings | ErrorLike | null {
-    if (isErrorLike(settings)) {
-        return settings
-    }
-    if (settings === null) {
-        return null
-    }
-    if (settings && settings.extensions && settings.extensions[extensionID]) {
-        return settings.extensions[extensionID]
-    }
-    return null
 }

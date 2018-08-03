@@ -5,7 +5,7 @@ import DropdownItem from 'reactstrap/lib/DropdownItem'
 import { Subject, Subscription } from 'rxjs'
 import { catchError, map, mapTo, startWith, switchMap, tap } from 'rxjs/operators'
 import { ExtensionsProps } from '../context'
-import { ExtensionSettings } from '../copypasta'
+import { Settings } from '../copypasta'
 import { asError, ErrorLike, isErrorLike } from '../errors'
 import {
     ConfigurationSubject,
@@ -14,11 +14,11 @@ import {
     subjectLabel,
     subjectTypeHeader,
 } from '../settings'
-import { ConfiguredExtension } from './extension'
+import { ConfiguredExtension, isExtensionEnabled } from './extension'
 
 interface ExtensionConfiguredSubject {
     extension: ConfiguredExtension
-    subject: ConfiguredSubject<ConfigurationSubject, ExtensionSettings>
+    subject: ConfiguredSubject<ConfigurationSubject, Settings> // TODO!(sqs): extension-specific settings schema
 }
 
 /** A dropdown menu item for a extension-subject item that links to the subject's settings.  */
@@ -34,7 +34,9 @@ export class ExtensionConfiguredSubjectItemForConfigure<S extends ConfigurationS
                 <span className="mr-4">{subjectLabel(this.props.item.subject.subject)}</span>
                 {this.props.item.subject.settings &&
                     !isErrorLike(this.props.item.subject.settings) &&
-                    !!this.props.item.subject.settings.disabled && <small className="text-muted">Disabled</small>}
+                    !isExtensionEnabled(this.props.item.subject.settings, this.props.item.extension.extensionID) && (
+                        <small className="text-muted">Disabled</small>
+                    )}
             </Link>
         )
     }
@@ -266,9 +268,9 @@ export const ADDED_AND_CAN_ADMINISTER: ExtensionConfigurationSubjectsFilter = {
 }
 
 function filterItems<S extends ConfigurationSubject>(
-    items: ConfiguredSubject<S, ExtensionSettings>[],
+    items: ConfiguredSubject<S>[],
     filter: ExtensionConfigurationSubjectsFilter
-): ConfiguredSubject<S, ExtensionSettings>[] {
+): ConfiguredSubject<S>[] {
     return items.filter(item => {
         const isAdded = item.settings !== null
         if (isAdded && !filter.added) {

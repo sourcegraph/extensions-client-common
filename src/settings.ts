@@ -21,7 +21,7 @@ export type ConfigurationSubject = Pick<GQL.IConfigurationSubject, 'id' | 'setti
  * @template S the configuration subject type
  * @template C the settings type
  */
-export interface ConfigurationCascade<S extends ConfigurationSubject, C> {
+export interface ConfigurationCascade<S extends ConfigurationSubject, C = Settings> {
     /**
      * The settings for each subject in the cascade, from lowest to highest precedence.
      */
@@ -41,7 +41,7 @@ export interface ConfigurationCascade<S extends ConfigurationSubject, C> {
  * @template S the configuration subject type
  * @template C the settings type
  */
-export interface ConfiguredSubject<S extends ConfigurationSubject, C> {
+export interface ConfiguredSubject<S extends ConfigurationSubject, C = Settings> {
     /** The subject. */
     subject: S
 
@@ -62,17 +62,16 @@ export interface SubjectConfigurationContents {
 }
 
 /** Converts a GraphQL ConfigurationCascade value to a value of this library's ConfigurationCascade type. */
-export function gqlToCascade<S extends ConfigurationSubject>({
+export function gqlToCascade<S extends ConfigurationSubject, C = Settings>({
     subjects,
 }: {
     subjects: (S & SubjectConfigurationContents)[]
-}): ConfigurationCascade<S, Settings> {
-    const cascade: ConfigurationCascade<S, Settings> = { subjects: [], merged: null }
-    const allSettings: Settings[] = []
+}): ConfigurationCascade<S, C> {
+    const cascade: ConfigurationCascade<S, C> = { subjects: [], merged: null }
+    const allSettings: C[] = []
     const allSettingsErrors: ErrorLike[] = []
     for (const subject of subjects) {
-        const settings =
-            subject.latestSettings && parseJSONCOrError<Settings>(subject.latestSettings.configuration.contents)
+        const settings = subject.latestSettings && parseJSONCOrError<C>(subject.latestSettings.configuration.contents)
         cascade.subjects.push({ subject, settings })
 
         if (isErrorLike(settings)) {
@@ -85,7 +84,7 @@ export function gqlToCascade<S extends ConfigurationSubject>({
     if (allSettingsErrors.length > 0) {
         cascade.merged = createAggregateError(allSettingsErrors)
     } else {
-        cascade.merged = mergeSettings(allSettings)
+        cascade.merged = mergeSettings<C>(allSettings)
     }
 
     return cascade

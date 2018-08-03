@@ -1,4 +1,4 @@
-import { ExtensionSettings } from '../copypasta'
+import { Settings } from '../copypasta'
 import { ErrorLike } from '../errors'
 import { SourcegraphExtension } from '../schema/extension.schema'
 import * as GQL from '../schema/graphqlschema'
@@ -10,12 +10,12 @@ import { ConfigurationSubject, ConfiguredSubject } from '../settings'
  * TODO!(sqs): rename to ConfiguredExtension
  *
  * @template S the configuration subject type
- * @template C the settings type
+ * @template C the type of the extension's settings (overlaid on the base settings JSON Schema-derived type)
  * @template RX the registry extension type
  */
 export interface ConfiguredExtension<
     S extends ConfigurationSubject = ConfigurationSubject,
-    C extends ExtensionSettings = ExtensionSettings,
+    C extends { [key: string]: any } = Settings,
     RX extends Pick<GQL.IRegistryExtension, 'id' | 'url' | 'viewerCanAdminister'> = Pick<
         GQL.IRegistryExtension,
         'id' | 'url' | 'viewerCanAdminister'
@@ -45,4 +45,8 @@ export interface ConfiguredExtension<
 
     /** The corresponding extension on the registry, if any. */
     registryExtension?: RX
+}
+
+export function isExtensionEnabled(settings: Settings, extensionID: string): boolean {
+    return !!settings.extensions && !!settings.extensions[extensionID]
 }

@@ -1,8 +1,6 @@
-import { isEqual } from 'lodash-es'
-import { Observable } from 'rxjs'
-import { distinctUntilChanged, map } from 'rxjs/operators'
+import { cloneDeep, isFunction, isPlainObject } from 'lodash-es'
 import { Settings } from './copypasta'
-import { ErrorLike } from './errors'
+import { createAggregateError, ErrorLike, isErrorLike } from './errors'
 import * as GQL from './schema/graphqlschema'
 import { parseJSONCOrError } from './util'
 
@@ -54,23 +52,88 @@ export interface ConfiguredSubject<S extends ConfigurationSubject, C> {
     settings: C | ErrorLike | null
 }
 
-export function gqlToCascade(
-    gqlCascade: Observable<GQL.IConfigurationCascade>
-): Observable<ConfigurationCascade<ConfigurationSubject, Settings>> {
-    return gqlCascade.pipe(
-        map(
-            ({ subjects, merged }) =>
-                ({
-                    subjects: subjects.map(({ latestSettings, ...subject }) => ({
-                        subject,
-                        settings: latestSettings && parseJSONCOrError<Settings>(latestSettings.configuration.contents),
-                    })),
-                    // TODO(sqs): perform the merging on the client side too so we can merge in settings that are never stored on Sourcegraph
-                    merged: parseJSONCOrError<Settings>(merged.contents),
-                } as ConfigurationCascade<ConfigurationSubject, Settings>)
-        ),
-        distinctUntilChanged((a, b) => isEqual(a, b))
-    )
+/** A minimal subset of a GraphQL ConfigurationSubject type that includes only the single contents value. */
+export interface SubjectConfigurationContents {
+    latestSettings: {
+        configuration: {
+            contents: string
+        }
+    } | null
+}
+
+/** Converts a GraphQL ConfigurationCascade value to a value of this library's ConfigurationCascade type. */
+export function gqlToCascade<S extends ConfigurationSubject>({
+    subjects,
+}: {
+    subjects: (S & SubjectConfigurationContents)[]
+}): ConfigurationCascade<S, Settings> {
+    const cascade: ConfigurationCascade<S, Settings> = { subjects: [], merged: null }
+    const allSettings: Settings[] = []
+    const allSettingsErrors: ErrorLike[] = []
+    for (const subject of subjects) {
+        const settings =
+            subject.latestSettings && parseJSONCOrError<Settings>(subject.latestSettings.configuration.contents)
+        cascade.subjects.push({ subject, settings })
+
+        if (isErrorLike(settings)) {
+            allSettingsErrors.push(settings)
+        } else if (settings !== null) {
+            allSettings.push(settings)
+        }
+    }
+
+    if (allSettingsErrors.length > 0) {
+        cascade.merged = createAggregateError(allSettingsErrors)
+    } else {
+        cascade.merged = mergeSettings(allSettings)
+    }
+
+    return cascade
+}
+
+/**
+ * Deeply merges the settings without modifying any of the input values. The array is ordered from lowest to
+ * highest precedence in the merge.
+ *
+ * TODO(sqs): In the future, this will pass a CustomMergeFunctions value to merge.
+ */
+export function mergeSettings<C extends Settings>(values: C[]): C | null {
+    if (values.length === 0) {
+        return null
+    }
+    const target = cloneDeep(values[0])
+    for (const value of values.slice(1)) {
+        merge(target, value)
+    }
+    return target
+}
+
+export interface CustomMergeFunctions {
+    [key: string]: (base: any, add: any) => any | CustomMergeFunctions
+}
+
+/**
+ * Deeply merges add into base (modifying base). The merged value for a key path can be customized by providing a
+ * function at the same key path in custom.
+ *
+ * Most callers should use mergeSettings, which uses the set of CustomMergeFunctions that are required to properly
+ * merge settings.
+ */
+export function merge(base: any, add: any, custom?: CustomMergeFunctions): void {
+    for (const key of Object.keys(add)) {
+        if (key in base) {
+            const customEntry = custom && custom[key]
+            if (customEntry && isFunction(customEntry)) {
+                base[key] = customEntry(base[key], add[key])
+            } else if (isPlainObject(base[key]) && isPlainObject(add[key])) {
+                merge(base[key], add[key], customEntry)
+            } else {
+                base[key] = add[key]
+            }
+        } else {
+            base[key] = add[key]
+        }
+    }
 }
 
 /**

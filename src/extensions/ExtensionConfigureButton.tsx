@@ -61,7 +61,7 @@ export class ExtensionConfiguredSubjectItemForAdd<S extends ConfigurationSubject
             this.addClicks
                 .pipe(
                     switchMap(() =>
-                        this.props.forxContext
+                        this.props.extensionsContext
                             .updateExtensionSettings(this.props.item.subject.subject, {
                                 extensionID: this.props.item.extension.extensionID,
                                 enabled: true,
@@ -99,7 +99,7 @@ export class ExtensionConfiguredSubjectItemForAdd<S extends ConfigurationSubject
                 <div>
                     {isErrorLike(this.state.addOrError) && (
                         <small className="text-danger" title={this.state.addOrError.message}>
-                            <this.props.forxContext.icons.Warning className="icon-inline" /> Error
+                            <this.props.extensionsContext.icons.Warning className="icon-inline" /> Error
                         </small>
                     )}
                     {this.props.item.subject.settings !== null && (
@@ -138,7 +138,7 @@ export class ExtensionConfiguredSubjectItemForRemove<S extends ConfigurationSubj
             this.removeClicks
                 .pipe(
                     switchMap(() =>
-                        this.props.forxContext
+                        this.props.extensionsContext
                             .updateExtensionSettings(this.props.item.subject.subject, {
                                 extensionID: this.props.item.extension.extensionID,
                                 remove: true,
@@ -175,7 +175,7 @@ export class ExtensionConfiguredSubjectItemForRemove<S extends ConfigurationSubj
                 <div>
                     {isErrorLike(this.state.removeOrError) && (
                         <small className="text-danger" title={this.state.removeOrError.message}>
-                            <this.props.forxContext.icons.Warning className="icon-inline" /> Error
+                            <this.props.extensionsContext.icons.Warning className="icon-inline" /> Error
                         </small>
                     )}
                 </div>
@@ -338,7 +338,7 @@ export class ExtensionConfigureButton<S extends ConfigurationSubject, C> extends
                             })
                         )}
                         onUpdate={this.props.onUpdate}
-                        forxContext={this.props.forxContext}
+                        extensionsContext={this.props.extensionsContext}
                     />
                 </DropdownMenu>
             </ButtonDropdown>

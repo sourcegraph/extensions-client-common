@@ -5,7 +5,7 @@ import * as GQL from './schema/graphqlschema'
 import { ConfigurationCascade, ConfigurationSubject } from './settings/cascade'
 
 /**
- * Description of the context in which for-x is running, and platform-specific hooks.
+ * Description of the context in which extensions-client-common is running, and platform-specific hooks.
  */
 export interface Context<S extends ConfigurationSubject, C> {
     /**
@@ -48,7 +48,7 @@ export interface Context<S extends ConfigurationSubject, C> {
  * React partial props for components needing Context.
  */
 export interface ContextProps<S extends ConfigurationSubject, C> {
-    forxContext: Context<S, C>
+    extensionsContext: Context<S, C>
 }
 
 /**

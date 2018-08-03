@@ -204,7 +204,7 @@ export class ExtensionsList<S extends ConfigurationSubject, C> extends React.Pur
                     </div>
                 </form>
                 {this.state.data.resultOrError === LOADING ? (
-                    <this.props.forxContext.icons.Loader className="icon-inline" />
+                    <this.props.extensionsContext.icons.Loader className="icon-inline" />
                 ) : isErrorLike(this.state.data.resultOrError) ? (
                     <div className="alert alert-danger">{this.state.data.resultOrError.message}</div>
                 ) : (
@@ -228,7 +228,7 @@ export class ExtensionsList<S extends ConfigurationSubject, C> extends React.Pur
                                         authenticatedUser={this.props.authenticatedUser}
                                         node={e}
                                         onDidUpdate={this.onDidUpdateExtension}
-                                        forxContext={this.props.forxContext}
+                                        extensionsContext={this.props.extensionsContext}
                                     />
                                 ))}
                             </div>
@@ -250,7 +250,7 @@ export class ExtensionsList<S extends ConfigurationSubject, C> extends React.Pur
             take(1),
 
             switchMap(viewerExtensions =>
-                this.props.forxContext
+                this.props.extensionsContext
                     .queryGraphQL(
                         gql`
                             query RegistryExtensions($query: String, $prioritizeExtensionIDs: [String!]!) {

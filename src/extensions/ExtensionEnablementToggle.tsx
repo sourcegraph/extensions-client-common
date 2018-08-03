@@ -56,7 +56,7 @@ export class ExtensionEnablementToggle<S extends ConfigurationSubject, C> extend
             this.toggles
                 .pipe(
                     switchMap(enabled =>
-                        this.props.forxContext
+                        this.props.extensionsContext
                             .updateExtensionSettings(this.props.subject, {
                                 extensionID: this.props.extension.extensionID,
                                 enabled,
@@ -98,7 +98,7 @@ export class ExtensionEnablementToggle<S extends ConfigurationSubject, C> extend
             <div className="d-flex align-items-center">
                 {isErrorLike(this.state.toggleOrError) && (
                     <span className="text-danger" title={this.state.toggleOrError.message}>
-                        <this.props.forxContext.icons.Warning className="icon-inline" />
+                        <this.props.extensionsContext.icons.Warning className="icon-inline" />
                     </span>
                 )}
                 <Toggle

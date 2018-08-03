@@ -41,7 +41,7 @@ export class ExtensionCard<S extends ConfigurationSubject, C> extends React.Pure
                             {node.manifest ? (
                                 isErrorLike(node.manifest) ? (
                                     <span className="text-danger small" title={node.manifest.message}>
-                                        <props.forxContext.icons.Warning className="icon-inline" /> Invalid manifest
+                                        <props.extensionsContext.icons.Warning className="icon-inline" /> Invalid manifest
                                     </span>
                                 ) : (
                                     node.manifest.description && (
@@ -50,7 +50,7 @@ export class ExtensionCard<S extends ConfigurationSubject, C> extends React.Pure
                                 )
                             ) : (
                                 <span className="text-warning small">
-                                    <props.forxContext.icons.Warning className="icon-inline" /> No manifest
+                                    <props.extensionsContext.icons.Warning className="icon-inline" /> No manifest
                                 </span>
                             )}
                         </div>
@@ -79,7 +79,7 @@ export class ExtensionCard<S extends ConfigurationSubject, C> extends React.Pure
                                                     itemComponent={ExtensionConfiguredSubjectItemForRemove}
                                                     buttonClassName="btn-outline-link btn-sm py-0 mr-1"
                                                     caret={false}
-                                                    forxContext={this.props.forxContext}
+                                                    extensionsContext={this.props.extensionsContext}
                                                 >
                                                     Remove
                                                 </ExtensionConfigureButton>
@@ -92,7 +92,7 @@ export class ExtensionCard<S extends ConfigurationSubject, C> extends React.Pure
                                                 subject={props.authenticatedUser}
                                                 onChange={props.onDidUpdate}
                                                 tabIndex={-1}
-                                                forxContext={this.props.forxContext}
+                                                extensionsContext={this.props.extensionsContext}
                                             />
                                         </li>
                                     )}
@@ -106,7 +106,7 @@ export class ExtensionCard<S extends ConfigurationSubject, C> extends React.Pure
                                                 itemComponent={ExtensionConfiguredSubjectItemForAdd}
                                                 buttonClassName="btn-primary btn-sm"
                                                 caret={false}
-                                                forxContext={this.props.forxContext}
+                                                extensionsContext={this.props.extensionsContext}
                                             >
                                                 Add
                                             </ExtensionConfigureButton>

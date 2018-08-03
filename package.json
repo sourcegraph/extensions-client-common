@@ -1,15 +1,15 @@
 {
-  "name": "@sourcegraph/for-x",
+  "name": "@sourcegraph/extensions-client-common",
   "version": "0.0.0-development",
   "description": "Common TypeScript/React client application code for CXP extension configuration and management, used in Sourcegraph and \"Sourcegraph for X\" products",
   "author": "Sourcegraph",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/sourcegraph/for-x.git"
+    "url": "https://github.com/sourcegraph/extensions-client-common.git"
   },
   "bugs": {
-    "url": "https://github.com/sourcegraph/for-x/issues"
+    "url": "https://github.com/sourcegraph/extensions-client-common/issues"
   },
   "main": "lib/index.js",
   "module": "lib/index.js",

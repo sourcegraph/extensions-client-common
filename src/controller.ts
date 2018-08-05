@@ -72,7 +72,7 @@ export class Controller<S extends ConfigurationSubject, C = Settings> {
             )
     }
 
-    private withRegistryMetadata(
+    public withRegistryMetadata(
         cascade: ConfigurationCascade<ConfigurationSubject, Settings>
     ): Observable<ConfiguredExtension[]> {
         if (isErrorLike(cascade.merged)) {

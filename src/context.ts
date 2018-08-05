@@ -4,7 +4,7 @@ import { Controller } from './controller'
 import { Settings } from './copypasta'
 import { QueryResult } from './graphql'
 import * as GQL from './schema/graphqlschema'
-import { ConfigurationCascade, ConfigurationSubject } from './settings'
+import { ConfigurationCascade, ConfigurationSubject, ID } from './settings'
 
 /**
  * Description of the context in which extensions-client-common is running, and platform-specific hooks.
@@ -20,7 +20,7 @@ export interface Context<S extends ConfigurationSubject, C = Settings> {
      * Updates the extension settings for extensionID and for the given subject.
      */
     updateExtensionSettings(
-        subject: GQL.ID,
+        subject: ID,
         args: {
             extensionID: string
             edit?: ConfigurationUpdateParams

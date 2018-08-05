@@ -3,8 +3,7 @@ import { Link } from 'react-router-dom'
 import { LinkOrSpan } from '../../components/LinkOrSpan'
 import { ExtensionsProps } from '../../context'
 import { isErrorLike } from '../../errors'
-import * as GQL from '../../schema/graphqlschema'
-import { ConfigurationSubject } from '../../settings'
+import { ConfigurationSubject, ID } from '../../settings'
 import { ConfiguredExtension } from '../extension'
 import {
     ADDED_AND_CAN_ADMINISTER,
@@ -17,7 +16,7 @@ import { ExtensionEnablementToggle } from '../ExtensionEnablementToggle'
 
 interface Props<S extends ConfigurationSubject, C> extends ExtensionsProps<S, C> {
     node: ConfiguredExtension
-    authenticatedUser: GQL.ID
+    authenticatedUser: ID
     onDidUpdate: () => void
 }
 

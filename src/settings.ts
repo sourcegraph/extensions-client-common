@@ -4,7 +4,9 @@ import { createAggregateError, ErrorLike, isErrorLike } from './errors'
 import * as GQL from './schema/graphqlschema'
 import { parseJSONCOrError } from './util'
 
-interface IClient {
+export type ID = string
+
+export interface IClient {
     __typename: 'Client'
     displayName: string
 }

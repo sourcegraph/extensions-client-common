@@ -4,15 +4,14 @@ import { catchError, distinctUntilChanged, map, mapTo, startWith, switchMap, tap
 import { Toggle } from '../components/Toggle'
 import { ExtensionsProps } from '../context'
 import { asError, ErrorLike, isErrorLike } from '../errors'
-import * as GQL from '../schema/graphqlschema'
-import { ConfigurationSubject } from '../settings'
+import { ConfigurationSubject, ID } from '../settings'
 import { ConfiguredExtension } from './extension'
 
 interface Props<S extends ConfigurationSubject, C> extends ExtensionsProps<S, C> {
     extension: ConfiguredExtension
 
     /** The subject whose settings are edited when the user toggles enablement using this component. */
-    subject: GQL.ID
+    subject: ID
 
     /**
      * Called when this component results in the extension's enablement state being changed.

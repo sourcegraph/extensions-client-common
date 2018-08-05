@@ -16,7 +16,7 @@ import { ExtensionsProps } from '../../context'
 import { asError, createAggregateError, ErrorLike, isErrorLike } from '../../errors'
 import { gql, graphQLContent } from '../../graphql'
 import * as GQL from '../../schema/graphqlschema'
-import { ConfigurationSubject } from '../../settings'
+import { ConfigurationSubject, ID } from '../../settings'
 import { ConfiguredExtension } from '../extension'
 import { ExtensionCard } from './ExtensionCard'
 
@@ -60,7 +60,7 @@ interface Props<S extends ConfigurationSubject, C>
     extends ExtensionsProps<S, C>,
         ExtensionsProps<S, C>,
         RouteComponentProps<{}> {
-    authenticatedUser: GQL.ID
+    authenticatedUser: ID
     emptyElement?: React.ReactFragment
 }
 

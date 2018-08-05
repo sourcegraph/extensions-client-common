@@ -12,7 +12,7 @@ interface Props<S extends ConfigurationSubject, C> extends ExtensionsProps<S, C>
     extension: ConfiguredExtension
 
     /** The subject whose settings are edited when the user toggles enablement using this component. */
-    subject: GQL.ConfigurationSubject | GQL.IConfigurationSubject | { id: GQL.ID }
+    subject: GQL.ID
 
     /**
      * Called when this component results in the extension's enablement state being changed.

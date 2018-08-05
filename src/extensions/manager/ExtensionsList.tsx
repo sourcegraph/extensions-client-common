@@ -60,7 +60,7 @@ interface Props<S extends ConfigurationSubject, C>
     extends ExtensionsProps<S, C>,
         ExtensionsProps<S, C>,
         RouteComponentProps<{}> {
-    authenticatedUser: GQL.IUser | null
+    authenticatedUser: GQL.ID
     emptyElement?: React.ReactFragment
 }
 

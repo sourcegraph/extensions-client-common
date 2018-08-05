@@ -17,7 +17,7 @@ import { ExtensionEnablementToggle } from '../ExtensionEnablementToggle'
 
 interface Props<S extends ConfigurationSubject, C> extends ExtensionsProps<S, C> {
     node: ConfiguredExtension
-    authenticatedUser: GQL.IUser | null
+    authenticatedUser: GQL.ID
     onDidUpdate: () => void
 }
 

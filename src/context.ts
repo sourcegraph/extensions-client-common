@@ -20,10 +20,11 @@ export interface Context<S extends ConfigurationSubject, C = Settings> {
      * Updates the extension settings for extensionID and for the given subject.
      */
     updateExtensionSettings(
-        subject: Pick<GQL.ConfigurationSubject, 'id'>,
+        subject: GQL.ID,
         args: {
             extensionID: string
             edit?: ConfigurationUpdateParams
+            // TODO: unclean api, allows 4 states (2 bools), but only 3 are valid (none/disabled/enabled)
             enabled?: boolean
             remove?: boolean
         }

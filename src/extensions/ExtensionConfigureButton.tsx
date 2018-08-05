@@ -73,7 +73,7 @@ export class ExtensionConfiguredSubjectItemForAdd<S extends ConfigurationSubject
                 .pipe(
                     switchMap(() =>
                         this.props.extensions.context
-                            .updateExtensionSettings(this.props.item.subject.subject, {
+                            .updateExtensionSettings(this.props.item.subject.subject.id, {
                                 extensionID: this.props.item.extension.extensionID,
                                 enabled: true,
                             })
@@ -147,7 +147,7 @@ export class ExtensionConfiguredSubjectItemForRemove<S extends ConfigurationSubj
                 .pipe(
                     switchMap(() =>
                         this.props.extensions.context
-                            .updateExtensionSettings(this.props.item.subject.subject, {
+                            .updateExtensionSettings(this.props.item.subject.subject.id, {
                                 extensionID: this.props.item.extension.extensionID,
                                 remove: true,
                             })

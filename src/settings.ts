@@ -4,12 +4,18 @@ import { createAggregateError, ErrorLike, isErrorLike } from './errors'
 import * as GQL from './schema/graphqlschema'
 import { parseJSONCOrError } from './util'
 
+interface IClient {
+    __typename: 'Client'
+    displayName: string
+}
+
 /**
  * A configuration subject is something that can have settings associated with it, such as a site ("global
  * settings"), an organization ("organization settings"), a user ("user settings"), etc.
  */
 export type ConfigurationSubject = Pick<GQL.IConfigurationSubject, 'id' | 'settingsURL' | 'viewerCanAdminister'> &
     (
+        | Pick<IClient, '__typename' | 'displayName'>
         | Pick<GQL.IUser, '__typename' | 'username' | 'displayName'>
         | Pick<GQL.IOrg, '__typename' | 'name' | 'displayName'>
         | Pick<GQL.ISite, '__typename'>)
@@ -138,30 +144,30 @@ export function merge(base: any, add: any, custom?: CustomMergeFunctions): void 
 /**
  * The conventional ordering of extension configuration subject types in a list.
  */
-export const SUBJECT_TYPE_ORDER: GQL.ConfigurationSubject['__typename'][] = ['User', 'Org', 'Site']
+export const SUBJECT_TYPE_ORDER: ConfigurationSubject['__typename'][] = ['Client', 'User', 'Org', 'Site']
 
-export function subjectTypeHeader(nodeType: GQL.ConfigurationSubject['__typename']): string | null {
+export function subjectTypeHeader(nodeType: ConfigurationSubject['__typename']): string | null {
     switch (nodeType) {
+        case 'Client':
+            return null
         case 'Site':
             return null
         case 'Org':
             return 'Organization:'
         case 'User':
             return null
-        default:
-            return null
     }
 }
 
 export function subjectLabel(subject: ConfigurationSubject): string {
     switch (subject.__typename) {
+        case 'Client':
+            return 'Client'
         case 'Site':
             return 'Everyone'
         case 'Org':
             return subject.name
         case 'User':
             return subject.username
-        default:
-            return 'Unknown'
     }
 }

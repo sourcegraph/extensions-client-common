@@ -1,6 +1,6 @@
 {
   "name": "@sourcegraph/extensions-client-common",
-  "version": "0.0.0-development",
+  "version": "0.0.1-development",
   "description": "Common TypeScript/React client application code for CXP extension configuration and management, used in Sourcegraph and \"Sourcegraph for X\" products",
   "author": "Sourcegraph",
   "license": "Apache-2.0",

@@ -59,9 +59,12 @@
   },
   "sideEffects": false,
   "dependencies": {
-    "lodash-es": "^4.17.10"
+    "lodash-es": "^4.17.10",
+    "string-score": "^1.0.1",
+    "ts-key-enum": "^2.0.0"
   },
   "peerDependencies": {
+    "cxp": "^6.4.0",
     "react": "^16.0.0",
     "react-dom": "^16.0.0",
     "react-router": "^4.2.0",
@@ -89,6 +92,7 @@
     "bootstrap": "^4.0.0",
     "concurrently": "^3.6.1",
     "cpy-cli": "^2.0.0",
+    "cxp": "^6.4.0",
     "del-cli": "^1.1.0",
     "esm": "^3.0.74",
     "gql2ts": "^1.8.2",

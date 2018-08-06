@@ -1,3 +1,4 @@
+import { ConfigurationUpdateParams } from 'cxp/lib/protocol'
 import { Observable } from 'rxjs'
 import { Controller } from './controller'
 import { Settings } from './copypasta'
@@ -15,12 +16,14 @@ export interface Context<S extends ConfigurationSubject, C = Settings> {
      */
     readonly configurationCascade: Observable<ConfigurationCascade<S, C>>
 
-    /** Updates the extension settings for extensionID and for the given subject. */
+    /**
+     * Updates the extension settings for extensionID and for the given subject.
+     */
     updateExtensionSettings(
         subject: Pick<GQL.ConfigurationSubject, 'id'>,
         args: {
             extensionID: string
-            edit?: GQL.IConfigurationEdit
+            edit?: ConfigurationUpdateParams
             enabled?: boolean
             remove?: boolean
         }
@@ -42,7 +45,18 @@ export interface Context<S extends ConfigurationSubject, C = Settings> {
      * React components for icons. They are expected to size themselves appropriately with the surrounding DOM flow
      * content.
      */
-    readonly icons: Record<'Loader' | 'Warning', React.ComponentType<{ className: 'icon-inline' }>>
+    readonly icons: Record<
+        'Loader' | 'Warning' | 'Menu' | 'CaretDown',
+        React.ComponentType<{
+            className: 'icon-inline' | string
+            onClick?: () => void
+        }>
+    >
+
+    /**
+     * Forces the currently displayed tooltip, if any, to update its contents.
+     */
+    forceUpdateTooltip(): void
 }
 
 /**

@@ -1,5 +1,5 @@
-import { ConfigurationUpdateParams } from 'cxp/module/protocol'
 import { Observable } from 'rxjs'
+import { ConfigurationUpdateParams } from '../../cxp-js/module/protocol'
 import { Controller } from './controller'
 import { Settings } from './copypasta'
 import { QueryResult } from './graphql'

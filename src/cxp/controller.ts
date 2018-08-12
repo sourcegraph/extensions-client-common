@@ -177,12 +177,17 @@ function environmentFilter(
  */
 export function createController<S extends ConfigurationSubject, C = Settings>(
     context: Context<S, C>,
-    createMessageTransports: (extension: CXPExtensionWithManifest, options: ClientOptions) => Promise<MessageTransports>
+    createMessageTransports: (
+        extension: CXPExtensionWithManifest,
+        options: ClientOptions
+    ) => Promise<MessageTransports>,
+    clientOptions: Partial<ClientOptions>
 ): Controller<CXPExtensionWithManifest> {
     const controller = new Controller({
         clientOptions: (key: ClientKey, options: ClientOptions, extension: CXPExtensionWithManifest) => {
             const errorHandler = new ErrorHandler(extension.id)
             return {
+                ...clientOptions,
                 createMessageTransports: () => createMessageTransports(extension, options),
                 initializationFailedHandler: err => errorHandler.initializationFailed(err),
                 errorHandler,

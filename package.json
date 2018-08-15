@@ -64,7 +64,7 @@
     "ts-key-enum": "^2.0.0"
   },
   "peerDependencies": {
-    "cxp": "^6.4.0",
+    "cxp": "^10.0.0",
     "react": "^16.0.0",
     "react-dom": "^16.0.0",
     "react-router": "^4.2.0",

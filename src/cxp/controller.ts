@@ -19,6 +19,7 @@ import { ConfiguredExtension, isExtensionEnabled } from '../extensions/extension
 import { ConfigurationCascade, ConfigurationSubject, Settings } from '../settings'
 import { getSavedClientTrace } from './client'
 import { registerBuiltinClientCommands, updateConfiguration } from './clientCommands'
+import { registerExtensionContributions } from './extension'
 
 /**
  * Adds the manifest to CXP extensions in the CXP environment, so we can consult it in the createMessageTransports
@@ -191,6 +192,7 @@ export function createController<S extends ConfigurationSubject, C extends Setti
     })
 
     registerBuiltinClientCommands(context, controller)
+    registerExtensionContributions(controller)
 
     function messageFromExtension(extension: string, message: string): string {
         return `From extension ${extension}:\n\n${message}`

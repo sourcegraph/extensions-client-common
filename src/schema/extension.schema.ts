@@ -9,6 +9,13 @@
  */
 export type ExtensionPlatform = BundleTarget | DockerTarget | WebSocketTarget | TcpTarget | ExecTarget
 /**
+ * Features contributed by this extension. Extensions may also register certain types of contributions dynamically.
+ */
+export type Contributions1 = {
+    configuration?: CoreSchemaMetaSchema
+    [k: string]: any
+} & Contributions
+/**
  * The JSON Schema for the configuration settings used by this extension. This schema is merged with the Sourcegraph settings schema. The final schema for settings is the union of Sourcegraph settings and all added extensions' settings.
  */
 export type CoreSchemaMetaSchema =
@@ -44,7 +51,7 @@ export interface SourcegraphExtension {
     args?: {
         [k: string]: any
     }
-    contributes?: Contributions
+    contributes?: Contributions1
 }
 /**
  * A JavaScript file that is run as a Web Worker to provide this extension's functionality.
@@ -101,8 +108,16 @@ export interface ExecTarget {
     command: string
 }
 /**
- * Features contributed by this extension. Extensions may also register certain types of contributions dynamically.
+ * Contributions TODO!(sqs).
  */
 export interface Contributions {
-    configuration?: CoreSchemaMetaSchema
+    /**
+     * actions provided by the extension
+     */
+    actions?: {
+        id?: string
+        command?: string
+        commandArguments?: string[]
+        title?: string
+    }[]
 }

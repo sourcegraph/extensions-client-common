@@ -32,7 +32,7 @@
     "cover": "TS_NODE_COMPILER_OPTIONS='{\"module\":\"commonjs\"}' nyc --require ts-node/register --require source-map-support/register  --require esm --all mocha --opts mocha.opts --timeout 10000",
     "watch:typecheck": "tsc -p tsconfig.json -w",
     "watch:build:typescript": "tsc -p tsconfig.dist.json -w",
-    "watch:build:assets": "nodemon --watch src/ --ext css,d.ts,json --exec 'npm run build:assets || exit 1'",
+    "watch:build:assets": "nodemon --watch src/ --watch node_modules/cxp/lib/protocol --ext css,d.ts,json --exec 'npm run build:assets || exit 1'",
     "watch:build": "npm run clean && concurrently --kill-others 'npm:watch:build:*'",
     "watch:test": "npm run test -- -w"
   },

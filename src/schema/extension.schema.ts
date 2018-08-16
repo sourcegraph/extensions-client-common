@@ -11,10 +11,120 @@ export type ExtensionPlatform = BundleTarget | DockerTarget | WebSocketTarget | 
 /**
  * Features contributed by this extension. Extensions may also register certain types of contributions dynamically.
  */
-export type Contributions1 = {
+export type Contributions = {
     configuration?: CoreSchemaMetaSchema
     [k: string]: any
-} & Contributions
+} & {
+    /**
+     * A specification of how to display this action as a button on a toolbar. The client is responsible for
+     * displaying contributions and defining which parts of its interface are considered to be toolbars. Generally,
+     * items on a toolbar are always visible and, compared to items in a dropdown menu or list, are expected to be
+     * smaller and to convey information (in addition to performing an action).
+     *
+     * For example, a "Toggle code coverage" action may prefer to display a summarized status (such as "Coverage:
+     * 77%") on a toolbar instead of the full title.
+     *
+     * Clients: If the label is empty and only an iconURL is set, and the client decides not to display the icon
+     * (e.g., because the client is not graphical), then the client may hide the item from the toolbar.
+     */
+    actionItem?: {
+        /**
+         * A description associated with this action item.
+         *
+         * Clients: The description should be shown in a tooltip when the user focuses or hovers this toolbar item.
+         */
+        description?: string
+        /**
+         * A description of the information represented by the icon.
+         *
+         * Clients: The client should not display this text directly. Instead, the client should use the
+         * accessibility facilities of the client's platform (such as the <img alt> attribute) to make it available
+         * to users needing the textual description.
+         */
+        iconDescription?: string
+        /**
+         * The icon URL for this action (data: URIs are OK).
+         *
+         * Clients: The client should this icon before the label (if any), proportionally scaling the dimensions as
+         * necessary to avoid unduly enlarging the toolbar item beyond the dimensions necessary to show the label.
+         * In space-constrained situations, the client should show only the icon and omit the label. The client
+         * must not display a border around the icon. The client may choose not to display this icon.
+         */
+        iconURL?: string
+        /**
+         * The text label for this item.
+         */
+        label?: string
+        [k: string]: any
+    }
+    /**
+     * The category that describes the group of related actions of which this action is a member.
+     *
+     * Clients: When displaying this action's title alongside titles of actions from other groups, the client
+     * should display each action as "${category}: ${title}" if the prefix is set.
+     */
+    category?: string
+    /**
+     * The command that this action invokes. It can refer to a command registered by the same extension or any
+     * other extension, or to a builtin command.
+     *
+     * Extensions: The command must be registered (unless it is a builtin command). Extensions can register
+     * commands in the `initialize` response or via `client/registerCapability`.
+     *
+     * ## Builtin client commands
+     *
+     * Clients: All clients must handle the following commands as specified.
+     *
+     * ### `open` {@link ActionContributionClientCommandOpen}
+     *
+     * The builtin command `open` causes the client to open a URL (specified as a string in the first element of
+     * commandArguments) using the default URL handler, instead of invoking the command on the extension.
+     *
+     * Clients: The client should treat the first element of commandArguments as a URL (string) to open with the
+     * default URL handler (instead of sending a request to the extension to execute this command). If the client
+     * is running in a web browser, the client should render the action as an HTML <a> element so that it behaves
+     * like a link.
+     *
+     * ### `updateConfiguration` {@link ActionContributionClientCommandUpdateConfiguration}
+     *
+     * The builtin command `updateConfiguration` causes the client to apply an update to the configuration settings.
+     */
+    command?: string
+    /**
+     * Optional arguments to pass to the extension when the action is invoked.
+     */
+    commandArguments?: any[]
+    /**
+     * A longer description of the action taken by this action.
+     *
+     * Extensions: The description should not be unnecessarily repetitive with the title.
+     *
+     * Clients: If the description is shown, the title must be shown nearby.
+     */
+    description?: string
+    /**
+     * A URL to an icon for this action (data: URIs are OK).
+     *
+     * Clients: The client should show this icon before the title, proportionally scaling the dimensions as
+     * necessary to avoid unduly enlarging the item beyond the dimensions necessary to render the text. The client
+     * should assume the icon is square (or roughly square). The client must not display a border around the icon.
+     * The client may choose not to display this icon.
+     */
+    iconURL?: string
+    /**
+     * The identifier for this action, which must be unique among all contributed actions.
+     *
+     * Extensions: By convention, this is a dotted string of the form `myExtensionName.myActionName`. It is common
+     * to use the same values for `id` and `command` (for the common case where the command has only one action
+     * that mentions it).
+     */
+    id?: string
+    /**
+     * The title that succinctly describes what this action does.
+     */
+    title?: string
+    [k: string]: any
+}
 /**
  * The JSON Schema for the configuration settings used by this extension. This schema is merged with the Sourcegraph settings schema. The final schema for settings is the union of Sourcegraph settings and all added extensions' settings.
  */
@@ -51,7 +161,7 @@ export interface SourcegraphExtension {
     args?: {
         [k: string]: any
     }
-    contributes?: Contributions1
+    contributes?: Contributions
 }
 /**
  * A JavaScript file that is run as a Web Worker to provide this extension's functionality.
@@ -106,18 +216,4 @@ export interface ExecTarget {
      * The path to the executable to run.
      */
     command: string
-}
-/**
- * Contributions TODO!(sqs).
- */
-export interface Contributions {
-    /**
-     * actions provided by the extension
-     */
-    actions?: {
-        id?: string
-        command?: string
-        commandArguments?: string[]
-        title?: string
-    }[]
 }

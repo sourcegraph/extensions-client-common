@@ -90,7 +90,7 @@ export class ExtensionStatus<S extends ConfigurationSubject, C extends Settings>
                                     className="extension-status__client list-group-item d-flex align-items-center justify-content-between py-2"
                                 >
                                     <span className="d-flex align-items-center">
-                                        <span data-tooltip={key.root || 'no root'}>{client.id}</span>
+                                        {client.id}
                                         <span className={`badge badge-${clientStateBadgeClass(state)} ml-1`}>
                                             {CXPClientState[state]}
                                         </span>

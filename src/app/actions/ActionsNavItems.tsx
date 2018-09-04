@@ -8,8 +8,8 @@ import { ActionsProps, ActionsState } from './actions'
 import { getContributedActionItems } from './contributions'
 
 /**
- * Renders the actions a fragment of <li class="nav-item"> elements, for use in a Bootstrap <ul class="nav"> or <ul
- * class="navbar-nav">.
+ * Renders the actions as a fragment of <li class="nav-item"> elements, for use in a Bootstrap <ul
+ * class="nav"> or <ul class="navbar-nav">.
  */
 export class ActionsNavItems<S extends ConfigurationSubject, C extends Settings> extends React.PureComponent<
     ActionsProps<S, C>,

@@ -1,3 +1,4 @@
+import { Component } from 'cxp/module/environment/environment'
 import { ContributableMenu, Contributions } from 'cxp/module/protocol'
 import { ExtensionsProps } from '../../context'
 import { CXPControllerProps } from '../../cxp/controller'
@@ -7,6 +8,7 @@ export interface ActionsProps<S extends ConfigurationSubject, C extends Settings
     extends CXPControllerProps<S, C>,
         ExtensionsProps<S, C> {
     menu: ContributableMenu
+    scope?: Component
     actionItemClass?: string
     listClass?: string
 }

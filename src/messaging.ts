@@ -88,7 +88,7 @@ function connectTo(other: Source): Promise<Connection> {
 
     return new Promise(resolve => {
         const incomingMessages: Observable<Message> = fromEvent<MessageEvent>(window, 'message').pipe(
-            map<MessageEvent, Message & { source: Source } | undefined>(event => event.data),
+            map<MessageEvent, Message & { source?: Source } | undefined>(event => event.data),
             filter((message): message is Message & { source: Source } => !!message && message.source === other)
         )
 

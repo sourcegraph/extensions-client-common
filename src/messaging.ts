@@ -8,29 +8,18 @@ import { UpdateExtensionSettingsArgs } from './context'
  */
 export type Source = 'Client' | 'Page'
 
-/** Useful for building tagged union types. */
-interface Tagged<T> {
-    type: T
-}
-
-/**
- * Enumeration of all the types of messages that could be sent between the page
- * and client.
- */
-type MessageType = 'Ping' | 'EditSettings' | 'GetSettings' | 'Settings'
-
 /**
  * The first message sent between the page and client, and used to detect
  * presence of each other.
  */
-export interface Ping extends Tagged<MessageType> {
+export interface Ping {
     type: 'Ping'
 }
 
 /**
  * Intent to change a settings value. This is sent from the page to the client.
  */
-export interface EditSettings extends Tagged<MessageType> {
+export interface EditSettings {
     type: 'EditSettings'
     edit: UpdateExtensionSettingsArgs
 }
@@ -39,7 +28,7 @@ export interface EditSettings extends Tagged<MessageType> {
  * A request for the client to send the latest settings back. This is sent from
  * the page to the client.
  */
-export interface GetSettings extends Tagged<MessageType> {
+export interface GetSettings {
     type: 'GetSettings'
 }
 
@@ -47,7 +36,7 @@ export interface GetSettings extends Tagged<MessageType> {
  * A notification that the client settings have been updated. This is sent from
  * the client to the page.
  */
-export interface Settings extends Tagged<MessageType> {
+export interface Settings {
     type: 'Settings'
     settings: string
 }

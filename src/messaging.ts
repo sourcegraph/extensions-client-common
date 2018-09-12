@@ -1,133 +1,161 @@
-import { fromEvent, Observable } from 'rxjs'
-import { filter, map, take } from 'rxjs/operators'
+import { fromEvent, Subscribable, Subscription } from 'rxjs'
+import { filter, map } from 'rxjs/operators'
+import { createMessageConnection, MessageConnection } from 'sourcegraph/module/jsonrpc2/connection'
+import { Message } from 'sourcegraph/module/jsonrpc2/messages'
+import {
+    AbstractMessageReader,
+    AbstractMessageWriter,
+    DataCallback,
+    MessageReader,
+    MessageWriter,
+} from 'sourcegraph/module/jsonrpc2/transport'
 import { UpdateExtensionSettingsArgs } from './context'
 
-/**
- * One end of the client-page connection. The browser extension is a client, and
- * the web app is a page.
- */
-export type Source = 'Client' | 'Page'
+class SubscribableMessageReader extends AbstractMessageReader implements MessageReader {
+    private pending: Message[] = []
+    private callback: DataCallback | null = null
+    private subscription = new Subscription()
 
-/**
- * The first message sent between the page and client, and used to detect
- * presence of each other.
- */
-export interface Ping {
-    type: 'Ping'
+    constructor(subscribable: Subscribable<Message>) {
+        super()
+
+        this.subscription.add(
+            subscribable.subscribe(message => {
+                try {
+                    if (this.callback) {
+                        this.callback(message)
+                    } else {
+                        this.pending.push(message)
+                    }
+                } catch (err) {
+                    this.fireError(err)
+                }
+            })
+        )
+    }
+
+    public listen(callback: DataCallback): void {
+        if (this.callback) {
+            throw new Error('callback is already set')
+        }
+        this.callback = callback
+        while (this.pending.length !== 0) {
+            callback(this.pending.pop()!)
+        }
+    }
+
+    public unsubscribe(): void {
+        super.unsubscribe()
+        this.subscription.unsubscribe()
+    }
 }
 
-/**
- * Intent to change a settings value. This is sent from the page to the client.
- */
-export interface EditSettings {
-    type: 'EditSettings'
-    edit: UpdateExtensionSettingsArgs
+class CallbackMessageWriter extends AbstractMessageWriter implements MessageWriter {
+    constructor(private callback: (message: Message) => void) {
+        super()
+    }
+
+    public write(message: Message): void {
+        this.callback(message)
+    }
+
+    public unsubscribe(): void {
+        super.unsubscribe()
+    }
 }
 
-/**
- * A request for the client to send the latest settings back. This is sent from
- * the page to the client.
- */
-export interface GetSettings {
-    type: 'GetSettings'
-}
+/** One side of a page/client connection. */
+export type Source = 'Page' | 'Client'
 
 /**
- * A notification that the client settings have been updated. This is sent from
- * the client to the page.
+ * Connects the Sourcegraph extension registry page to a client (such as a browser extension) or vice versa.
  */
-export interface Settings {
-    type: 'Settings'
-    settings: string
-}
+function connectAs(source: Source): Promise<MessageConnection> {
+    const messageConnection = createMessageConnection({
+        reader: new SubscribableMessageReader(
+            fromEvent<MessageEvent>(window, 'message').pipe(
+                // Filter to relevant messages, ignoring our own
+                filter(m => m.data && m.data.source && m.data.source !== source && m.data.message),
+                map(m => m.data.message)
+            )
+        ),
+        writer: new CallbackMessageWriter(message => {
+            window.postMessage({ source, message }, '*')
+        }),
+    })
 
-/** A message that is passed between the client and page. */
-type Message = Ping | EditSettings | GetSettings | Settings
+    messageConnection.listen()
+
+    return new Promise(resolve => {
+        messageConnection.onNotification('Ping', () => {
+            messageConnection.sendNotification('Pong')
+            resolve(messageConnection)
+        })
+        messageConnection.onNotification('Pong', () => {
+            resolve(messageConnection)
+        })
+        messageConnection.sendNotification('Ping')
+    })
+}
 
 /** A connection to the client. */
 export interface ClientConnection {
     /** Listens for the latest client settings. */
     onSettings: (callback: (settings: string) => void) => void
 
-    /** Tells the client to update a setting. */
-    editSettings: (edit: UpdateExtensionSettingsArgs) => void
+    /** Requests the client to update a setting. */
+    editSetting: (edit: UpdateExtensionSettingsArgs) => Promise<void>
 
     /** Asks the client for its settings. */
-    getSettings: () => void
+    getSettings: () => Promise<string>
+
+    /** The underlying JSON RPC connection. */
+    rawConnection: MessageConnection
 }
 
 /** A connection to the page. */
 export interface PageConnection {
     /** Listens for requests to edit settings. */
-    onEditSettings: (callback: (edit: UpdateExtensionSettingsArgs) => void) => void
+    onEditSetting: (callback: (edit: UpdateExtensionSettingsArgs) => Promise<void>) => void
 
     /** Listens for requests for the latest settings. */
-    onGetSettings: (callback: () => void) => void
+    onGetSettings: (callback: () => Promise<string>) => void
 
     /** Notifies the page that the settings have been updated. */
     sendSettings: (settings: string) => void
-}
 
-/** A low-level connection between the client and page. */
-interface Connection {
-    onMessage: (callback: (message: Message) => void) => void
-    sendMessage: (message: Message) => void
+    /** The underlying JSON RPC connection. */
+    rawConnection: MessageConnection
 }
 
 /**
- * Attempts to connect to the client/page and only resolves when the other end
- * pings back.
- *
- * Both the page and client send out an initial Ping, then another Ping for any
- * Ping that it receives from the other end. That way, both the page and client
- * will receive a ping no matter which one executes first. The receipt of a Ping
- * signals that the other end is present and ready to receive other messages.
+ * Connects the client (such as a browser extension) to a Sourcegraph extension registry page.
  */
-function connectTo(other: Source): Promise<Connection> {
-    const me = { Client: 'Page', Page: 'Client' }[other]
-
-    return new Promise(resolve => {
-        const incomingMessages: Observable<Message> = fromEvent<MessageEvent>(window, 'message').pipe(
-            map<MessageEvent, Message & { source?: Source } | undefined>(event => event.data),
-            filter((message): message is Message & { source: Source } => !!message && message.source === other)
-        )
-
-        const connection: Connection = {
-            onMessage: callback => {
-                incomingMessages.subscribe(callback)
-            },
-            sendMessage: (message: Message): void => {
-                window.postMessage({ source: me, ...message }, '*')
-            },
-        }
-
-        const ping = () => connection.sendMessage({ type: 'Ping' })
-
-        incomingMessages.pipe(take(1)).subscribe(() => {
-            ping()
-            resolve(connection)
-        })
-        ping()
-    })
-}
-
-/** Resolves when the client is ready to exchange messages. */
-export function connectToClient(): Promise<ClientConnection> {
-    return connectTo('Client').then(connection => ({
-        onSettings: (callback: (settings: string) => void) =>
-            connection.onMessage(message => (message.type === 'Settings' ? callback(message.settings) : undefined)),
-        getSettings: () => connection.sendMessage({ type: 'GetSettings' }),
-        editSettings: (edit: UpdateExtensionSettingsArgs) => connection.sendMessage({ type: 'EditSettings', edit }),
+export function connectAsClient(): Promise<PageConnection> {
+    return connectAs('Client').then<PageConnection>(connection => ({
+        onEditSetting: callback => {
+            connection.onRequest('EditSetting', callback)
+        },
+        onGetSettings: callback => {
+            connection.onRequest('GetSettings', callback)
+        },
+        sendSettings: settings => {
+            connection.sendNotification('Settings', settings)
+        },
+        rawConnection: connection,
     }))
 }
 
-/** Resolves when the page is ready to exchange messages. */
-export function connectToPage(): Promise<PageConnection> {
-    return connectTo('Page').then(connection => ({
-        onEditSettings: (callback: (edit: UpdateExtensionSettingsArgs) => void) =>
-            connection.onMessage(message => (message.type === 'EditSettings' ? callback(message.edit) : undefined)),
-        onGetSettings: (callback: () => void) =>
-            connection.onMessage(message => (message.type === 'GetSettings' ? callback() : undefined)),
-        sendSettings: (settings: string) => connection.sendMessage({ type: 'Settings', settings }),
+/**
+ * Connects the Sourcegraph extension registry page to a client (such as a browser extension).
+ */
+export function connectAsPage(): Promise<ClientConnection> {
+    return connectAs('Page').then<ClientConnection>(connection => ({
+        onSettings: callback => {
+            connection.onNotification('Settings', callback)
+        },
+        editSetting: callback => connection.sendRequest('EditSetting', callback),
+        getSettings: () => connection.sendRequest('GetSettings'),
+        rawConnection: connection,
     }))
 }

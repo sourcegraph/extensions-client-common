@@ -1,0 +1,20 @@
+@import 'open-color/open-color.scss';
+
+$primary: $oc-blue-7;
+$secondary: #2b3750;
+$success: $oc-green-7;
+$info: $oc-cyan-7;
+$warning: $oc-yellow-7;
+$danger: $oc-red-7;
+$secondary-light: darken(#f2f4f8, 5%);
+
+:root {
+    --primary: #{$primary};
+    --primary-opacity-2: rgba(28, 126, 214, 0.8);
+    --secondary: #{$secondary};
+    --success: #{$success};
+    --info: #{$info};
+    --warning: #{$warning};
+    --danger: #{$danger};
+    --text-muted: #f2f4f8;
+}

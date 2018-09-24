@@ -46,7 +46,7 @@ export class ExtensionCard<S extends ConfigurationSubject, C extends Settings> e
                                 manifest.icon &&
                                 iconURL &&
                                 iconURL.protocol === 'data:' &&
-                                /^data:image\/png/.test(manifest.icon) && (
+                                /^data:image\/png(;base64)?,/.test(manifest.icon) && (
                                     <img className="extension-card__icon mr-2" src={manifest.icon} />
                                 )}
                             <div>

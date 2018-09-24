@@ -16,6 +16,11 @@
       "type": "string",
       "maxLength": 280
     },
+    "icon": {
+      "description": "The extension icon.",
+      "type": "string",
+      "format": "uri"
+    },
     "readme": {
       "description": "The extension's README, which should describe (in detail) the extension's purpose, features, and usage instructions. Markdown formatting is supported.",
       "type": "string",

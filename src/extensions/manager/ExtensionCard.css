@@ -8,6 +8,12 @@
     color: var(--body-color) !important;
 }
 
+.extension-card .extension-card-icon {
+    width: 6rem;
+    height: 6rem;
+    margin-right: 1rem;
+}
+
 .extension-card .extension-card-spacer {
     flex: 1;
 }

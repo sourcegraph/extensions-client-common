@@ -36,7 +36,8 @@ export class ExtensionCard<S extends ConfigurationSubject, C extends Settings> e
                         <div className="d-flex">
                             {manifest &&
                                 manifest.icon &&
-                                /^data:/.test(manifest.icon) && (
+                                new URL(manifest.icon).protocol === 'data:' &&
+                                /^data:image\/png/.test(manifest.icon) && (
                                     <img className="extension-card__icon mr-2" src={manifest.icon} />
                                 )}
                             <div>

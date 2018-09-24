@@ -35,7 +35,10 @@ export class ExtensionCard<S extends ConfigurationSubject, C extends Settings> e
                     >
                         <div className="d-flex">
                             {manifest &&
-                                manifest.icon && <img className="extension-card__icon mr-2" src={manifest.icon} />}
+                                manifest.icon &&
+                                /^data:/.test(manifest.icon) && (
+                                    <img className="extension-card__icon mr-2" src={manifest.icon} />
+                                )}
                             <div>
                                 <h4 className="card-title extension-card-body-title mb-0">
                                     {manifest && manifest.title ? manifest.title : node.id}

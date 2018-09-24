@@ -25,6 +25,14 @@ export class ExtensionCard<S extends ConfigurationSubject, C extends Settings> e
         const { node, ...props } = this.props
         const manifest: ExtensionManifest | undefined =
             node.manifest && !isErrorLike(node.manifest) ? node.manifest : undefined
+        let iconURL: URL | undefined
+        try {
+            if (manifest && manifest.icon) {
+                iconURL = new URL(manifest.icon)
+            }
+        } catch (e) {
+            // noop
+        }
 
         return (
             <div className="d-flex col-sm-6 col-md-6 col-lg-4 pb-4">
@@ -36,7 +44,8 @@ export class ExtensionCard<S extends ConfigurationSubject, C extends Settings> e
                         <div className="d-flex">
                             {manifest &&
                                 manifest.icon &&
-                                new URL(manifest.icon).protocol === 'data:' &&
+                                iconURL &&
+                                iconURL.protocol === 'data:' &&
                                 /^data:image\/png/.test(manifest.icon) && (
                                     <img className="extension-card__icon mr-2" src={manifest.icon} />
                                 )}

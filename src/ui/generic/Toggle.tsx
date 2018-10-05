@@ -20,56 +20,35 @@ interface Props {
     className?: string
 }
 
-interface State {
-    value: boolean | undefined
-}
-
 /** A toggle switch input component. */
-export class Toggle extends React.PureComponent<Props, State> {
-    public state: State = { value: undefined }
-
+export class Toggle extends React.PureComponent<Props> {
     public render(): JSX.Element | null {
-        const value = this.state.value === undefined ? this.props.value : this.state.value
+        const onClick = () => {
+            if (this.props.onToggle) {
+                this.props.onToggle(!this.props.value)
+            }
+        }
 
         return (
             <button
                 className={`toggle ${this.props.disabled ? 'toggle__disabled' : ''}`}
                 id={this.props.id}
                 title={this.props.title}
-                value={value ? 1 : 0}
-                onClick={this.onClick}
+                value={this.props.value ? 1 : 0}
+                onClick={onClick}
                 tabIndex={this.props.tabIndex}
             >
                 <span
-                    className={`toggle__bar ${value ? 'toggle__bar--active' : ''} ${
+                    className={`toggle__bar ${this.props.value ? 'toggle__bar--active' : ''} ${
                         this.props.disabled ? 'toggle__bar--disabled' : ''
                     }`}
                 />
                 <span
-                    className={`toggle__knob ${value ? 'toggle__knob--active' : ''} ${
+                    className={`toggle__knob ${this.props.value ? 'toggle__knob--active' : ''} ${
                         this.props.disabled ? 'toggle__knob--disabled' : ''
                     }`}
                 />
             </button>
         )
-    }
-
-    private onClick: React.FormEventHandler<HTMLButtonElement> = e => {
-        if (this.props.disabled) {
-            return
-        }
-
-        this.setState(
-            ({ value }) => ({ value: !value }),
-            () => {
-                this.onToggle(this.state.value!)
-            }
-        )
-    }
-
-    private onToggle(value: boolean): void {
-        if (value !== !!this.props.value && this.props.onToggle) {
-            this.props.onToggle(value)
-        }
     }
 }

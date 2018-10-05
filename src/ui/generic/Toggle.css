@@ -1,9 +1,9 @@
 .toggle {
     background: none;
     border: none;
-    cursor: inherit;
+    cursor: pointer;
     display: block;
-    outline: inherit;
+    outline: none !important;
     padding: 0;
     position: relative;
     width: 2rem;

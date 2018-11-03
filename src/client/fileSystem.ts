@@ -1,5 +1,6 @@
 import { Subscribable } from 'rxjs'
 import * as sourcegraph from 'sourcegraph'
+import { FileType } from 'sourcegraph'
 import { createAggregateError } from '../errors'
 import { QueryResult } from '../graphql'
 import * as GQL from '../schema/graphqlschema'
@@ -30,8 +31,8 @@ export function getFileSystem(
                 await toPromise(
                     queryGraphQL(
                         `
-                        query ReadDirectory($repoName: String!, $rev: String!, $path: String!) {
-                            repository(name: $repoName) {
+                        query ReadDirectory($repo: String!, $rev: String!, $path: String!) {
+                            repository(name: $repo) {
                                 commit(rev: $rev) {
                                     tree(path: $path) {
                                         entries(recursive: false) {
@@ -52,10 +53,7 @@ export function getFileSystem(
             }
             return commit.tree.entries.map(
                 ({ name, isDirectory }) =>
-                    [name, isDirectory ? sourcegraph.FileType.Directory : sourcegraph.FileType.File] as [
-                        string,
-                        sourcegraph.FileType
-                    ]
+                    [name, isDirectory ? FileType.Directory : FileType.File] as [string, FileType]
             )
         },
         readFile: async uri => {
@@ -64,8 +62,8 @@ export function getFileSystem(
                 await toPromise(
                     queryGraphQL(
                         `
-                        query ReadDirectory($repoName: String!, $rev: String!, $path: String!) {
-                            repository(name: $repoName) {
+                        query ReadFile($repo: String!, $rev: String!, $path: String!) {
+                            repository(name: $repo) {
                                 commit(rev: $rev) {
                                     blob(path: $path) {
                                         content

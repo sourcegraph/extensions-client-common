@@ -1,4 +1,4 @@
-# extensions-client-common
+# extensions-client-common ⚠️ moved to https://github.com/sourcegraph/sourcegraph/tree/master/packages/extensions-client-common ⚠️
 
 [![build](https://travis-ci.org/sourcegraph/extensions-client-common.svg?branch=master)](https://travis-ci.org/sourcegraph/extensions-client-common)
 [![codecov](https://codecov.io/gh/sourcegraph/extensions-client-common/branch/master/graph/badge.svg?token=SLtdKY3zQx)](https://codecov.io/gh/sourcegraph/extensions-client-common)

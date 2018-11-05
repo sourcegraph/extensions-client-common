@@ -39,7 +39,7 @@ export interface Context<S extends ConfigurationSubject, C extends Settings> {
         request: string,
         variables?: { [name: string]: any },
         mightContainPrivateInfo?: boolean
-    ): Subscribable<QueryResult<Pick<GQL.IQuery, 'extensionRegistry'>>>
+    ): Subscribable<QueryResult<Pick<GQL.IQuery, 'extensionRegistry' | 'repository'>>>
 
     /**
      * Sends a batch of LSP requests to the Sourcegraph LSP gateway API and returns the result.
